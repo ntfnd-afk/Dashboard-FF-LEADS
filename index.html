@@ -2895,6 +2895,21 @@
                         columnElement.innerHTML = cardsHTML;
                         console.log(`After setting innerHTML, column content:`, columnElement.innerHTML);
                         console.log(`Column element children count:`, columnElement.children.length);
+                        
+                        // Проверяем видимость элемента
+                        console.log(`Column element computed style:`, {
+                            display: window.getComputedStyle(columnElement).display,
+                            visibility: window.getComputedStyle(columnElement).visibility,
+                            height: window.getComputedStyle(columnElement).height,
+                            width: window.getComputedStyle(columnElement).width,
+                            opacity: window.getComputedStyle(columnElement).opacity
+                        });
+                        
+                        // Принудительно делаем элемент видимым
+                        columnElement.style.display = 'block';
+                        columnElement.style.visibility = 'visible';
+                        columnElement.style.height = 'auto';
+                        columnElement.style.minHeight = '200px';
                     }
                 } else {
                     console.error(`Column element not found: ${stage.id}-leads-column`);
