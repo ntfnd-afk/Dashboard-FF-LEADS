@@ -28,11 +28,17 @@ async function addReminder() {
         return;
     }
 
+    // Создаем дату в локальном времени пользователя
     const reminderDateTime = new Date(`${date}T${time}`);
-    if (reminderDateTime <= new Date()) {
+    const now = new Date();
+    
+    if (reminderDateTime <= now) {
         showNotification('Время напоминания должно быть в будущем', 'error');
         return;
     }
+
+    // Вычисляем время до напоминания в миллисекундах
+    const timeUntilReminder = reminderDateTime.getTime() - now.getTime();
 
     try {
         // Проверяем доступность API
@@ -51,50 +57,56 @@ async function addReminder() {
             }
         }
 
-        if (apiAvailable) {
-            const response = await fetch(`${API_BASE_URL}/reminders`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text: text,
-                    datetime: reminderDateTime.toISOString(),
-                    user_id: currentUser ? currentUser.id : null
-                })
-            });
+        // Создаем напоминание с локальным временем
+        const newReminder = {
+            id: Date.now(),
+            text: text,
+            datetime: reminderDateTime.toISOString(), // Сохраняем в UTC для API
+            localDateTime: reminderDateTime.getTime(), // Сохраняем локальное время для планирования
+            user_id: currentUser ? currentUser.id : null,
+            completed: false
+        };
 
-            if (response.ok) {
-                const newReminder = await response.json();
-                reminders.push(newReminder);
-                localStorage.setItem('ff-reminders', JSON.stringify(reminders));
-                
-                hideAddReminderModal();
-                updateRemindersList();
-                updateGlobalRemindersList();
-                scheduleReminderNotification(newReminder);
-                
-                showNotification('Напоминание добавлено', 'success');
-            } else {
-                throw new Error('Ошибка сохранения напоминания');
+        // Всегда сохраняем в localStorage для надежности
+        reminders.push(newReminder);
+        localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+
+        // Если API доступен, также сохраняем на сервере
+        if (apiAvailable) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/reminders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newReminder)
+                });
+
+                if (response.ok) {
+                    const serverReminder = await response.json();
+                    // Обновляем ID с сервера
+                    newReminder.id = serverReminder.id;
+                    // Обновляем в массиве и localStorage
+                    const index = reminders.findIndex(r => r.id === Date.now());
+                    if (index !== -1) {
+                        reminders[index] = newReminder;
+                        localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+                    }
+                    showNotification('Напоминание добавлено', 'success');
+                } else {
+                    showNotification('Напоминание добавлено (локально)', 'success');
+                }
+            } catch (error) {
+                console.log('Ошибка синхронизации с сервером:', error);
+                showNotification('Напоминание добавлено (локально)', 'success');
             }
         } else {
-            // Офлайн режим - сохраняем в localStorage
-            const newReminder = {
-                id: Date.now(),
-                text: text,
-                datetime: reminderDateTime.toISOString(),
-                user_id: currentUser ? currentUser.id : null,
-                completed: false
-            };
-            reminders.push(newReminder);
-            localStorage.setItem('ff-reminders', JSON.stringify(reminders));
-            
-            hideAddReminderModal();
-            updateRemindersList();
-            updateGlobalRemindersList();
-            scheduleReminderNotification(newReminder);
-            
             showNotification('Напоминание добавлено (офлайн)', 'success');
         }
+
+        // Обновляем UI и планируем уведомление
+        hideAddReminderModal();
+        updateRemindersList();
+        updateGlobalRemindersList();
+        scheduleReminderNotification(newReminder);
     } catch (error) {
         console.error('Ошибка добавления напоминания:', error);
         showNotification('Ошибка добавления напоминания', 'error');
@@ -231,15 +243,23 @@ function updateRemindersList() {
     }
 
     remindersList.innerHTML = activeReminders.map(reminder => {
-        const reminderDate = new Date(reminder.datetime);
-        const isOverdue = reminderDate < new Date();
+        // Используем локальное время для отображения
+        const reminderDate = reminder.localDateTime ? new Date(reminder.localDateTime) : new Date(reminder.datetime);
+        const now = new Date();
+        const isOverdue = reminderDate < now;
         
         return `
             <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-500 ${isOverdue ? 'border-red-300 dark:border-red-600' : ''}">
                 <div class="flex-1">
                     <div class="text-sm font-medium text-gray-900 dark:text-white">${reminder.text}</div>
                     <div class="text-xs text-gray-500 dark:text-gray-400 ${isOverdue ? 'text-red-500 dark:text-red-400' : ''}">
-                        ${formatDate(reminder.datetime)} ${isOverdue ? '(Просрочено)' : ''}
+                        ${reminderDate.toLocaleString('ru-RU', { 
+                            day: '2-digit', 
+                            month: '2-digit', 
+                            year: 'numeric',
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        })} ${isOverdue ? '(Просрочено)' : ''}
                     </div>
                 </div>
                 <div class="flex space-x-2">
@@ -273,15 +293,23 @@ function updateGlobalRemindersList() {
     }
 
     globalRemindersList.innerHTML = upcomingReminders.map(reminder => {
-        const reminderDate = new Date(reminder.datetime);
-        const isOverdue = reminderDate < new Date();
+        // Используем локальное время для отображения
+        const reminderDate = reminder.localDateTime ? new Date(reminder.localDateTime) : new Date(reminder.datetime);
+        const now = new Date();
+        const isOverdue = reminderDate < now;
         
         return `
             <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-500 ${isOverdue ? 'border-red-300 dark:border-red-600' : ''}">
                 <div class="flex-1">
                     <div class="text-xs font-medium text-gray-900 dark:text-white truncate">${reminder.text}</div>
                     <div class="text-xs text-gray-500 dark:text-gray-400 ${isOverdue ? 'text-red-500 dark:text-red-400' : ''}">
-                        ${formatDate(reminder.datetime)} ${isOverdue ? '(Просрочено)' : ''}
+                        ${reminderDate.toLocaleString('ru-RU', { 
+                            day: '2-digit', 
+                            month: '2-digit', 
+                            year: 'numeric',
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        })} ${isOverdue ? '(Просрочено)' : ''}
                     </div>
                 </div>
                 <div class="flex space-x-1">
@@ -301,12 +329,15 @@ function updateGlobalRemindersList() {
 // ========================================
 
 function scheduleReminderNotification(reminder) {
-    const reminderTime = new Date(reminder.datetime);
+    // Используем локальное время для планирования
+    const reminderTime = reminder.localDateTime ? new Date(reminder.localDateTime) : new Date(reminder.datetime);
     const now = new Date();
     
     if (reminderTime <= now) return;
 
     const timeUntilReminder = reminderTime.getTime() - now.getTime();
+    
+    console.log(`Планируем уведомление на ${reminderTime.toLocaleString('ru-RU')} (через ${Math.round(timeUntilReminder / 1000 / 60)} минут)`);
     
     setTimeout(() => {
         showBrowserNotification(reminder.text);
