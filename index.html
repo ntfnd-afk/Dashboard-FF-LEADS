@@ -138,6 +138,10 @@
                             <i data-lucide="bell" class="h-4 w-4 mr-2"></i>
                             Уведомления
                         </button>
+                        <button id="adminSettingsBtn" onclick="showAdminSettings()" class="flex items-center px-3 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors hidden">
+                            <i data-lucide="settings" class="h-4 w-4 mr-2"></i>
+                            Настройки
+                        </button>
                         <button id="createAccountBtn" onclick="showUserRegistrationModal()" class="flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors hidden">
                             <i data-lucide="user-plus" class="h-4 w-4 mr-2"></i>
                             Создать аккаунт
@@ -284,12 +288,7 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Статус</label>
                             <select id="status-filter" onchange="filterLeads()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
                                 <option value="">Все статусы</option>
-                                <option value="new">Новый</option>
-                                <option value="contacted">Связались</option>
-                                <option value="quoted">Отправили смету</option>
-                                <option value="negotiating">Переговоры</option>
-                                <option value="won">Закрыт успешно</option>
-                                <option value="lost">Закрыт неуспешно</option>
+                                <!-- Опции будут загружены динамически -->
                             </select>
                         </div>
                         
@@ -297,11 +296,7 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Источник</label>
                             <select id="source-filter" onchange="filterLeads()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
                                 <option value="">Все источники</option>
-                                <option value="website">Сайт</option>
-                                <option value="referral">Рекомендация</option>
-                                <option value="cold-call">Холодный звонок</option>
-                                <option value="social">Социальные сети</option>
-                                <option value="other">Другое</option>
+                                <!-- Опции будут загружены динамически -->
                             </select>
                         </div>
                         
@@ -563,11 +558,7 @@
                         </label>
                         <select id="leadSource" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
                             <option value="">Выберите источник</option>
-                            <option value="website">Сайт</option>
-                            <option value="referral">Рекомендация</option>
-                            <option value="cold-call">Холодный звонок</option>
-                            <option value="social">Социальные сети</option>
-                            <option value="other">Другое</option>
+                            <!-- Опции будут загружены динамически -->
                         </select>
                     </div>
                     
@@ -576,12 +567,7 @@
                             Статус
                         </label>
                         <select id="leadStatus" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-                            <option value="new">Новый</option>
-                            <option value="contacted">Связались</option>
-                            <option value="quoted">Отправили смету</option>
-                            <option value="negotiating">Переговоры</option>
-                            <option value="won">Закрыт успешно</option>
-                            <option value="lost">Закрыт неуспешно</option>
+                            <!-- Опции будут загружены динамически -->
                         </select>
                     </div>
                 </div>
@@ -836,6 +822,97 @@
                     Закрыть
                 </button>
                 <button onclick="saveNotificationSettings()" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors">
+                    Сохранить настройки
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Settings Modal -->
+    <div id="adminSettingsModal" class="modal-overlay hidden">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full mx-4">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    Настройки системы
+                </h3>
+                <button onclick="hideAdminSettings()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i data-lucide="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <!-- Статусы лидов -->
+                <div class="mb-8">
+                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Статусы лидов</h4>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div id="statusList" class="space-y-2">
+                            <!-- Статусы будут загружены динамически -->
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <input type="text" id="newStatusName" placeholder="Новый статус" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                            <select id="newStatusColor" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                                <option value="blue">Синий</option>
+                                <option value="yellow">Желтый</option>
+                                <option value="purple">Фиолетовый</option>
+                                <option value="orange">Оранжевый</option>
+                                <option value="green">Зеленый</option>
+                                <option value="red">Красный</option>
+                                <option value="gray">Серый</option>
+                            </select>
+                            <button onclick="addNewStatus()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                                Добавить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Источники лидов -->
+                <div class="mb-8">
+                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Источники лидов</h4>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div id="sourceList" class="space-y-2">
+                            <!-- Источники будут загружены динамически -->
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <input type="text" id="newSourceName" placeholder="Новый источник" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                            <button onclick="addNewSource()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                                Добавить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Этапы воронки -->
+                <div class="mb-8">
+                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Этапы воронки (Канбан)</h4>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div id="pipelineList" class="space-y-2">
+                            <!-- Этапы будут загружены динамически -->
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <input type="text" id="newPipelineName" placeholder="Новый этап" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                            <select id="newPipelineColor" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                                <option value="blue">Синий</option>
+                                <option value="yellow">Желтый</option>
+                                <option value="purple">Фиолетовый</option>
+                                <option value="orange">Оранжевый</option>
+                                <option value="green">Зеленый</option>
+                                <option value="red">Красный</option>
+                                <option value="gray">Серый</option>
+                            </select>
+                            <button onclick="addNewPipelineStage()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                                Добавить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-4">
+                <button onclick="hideAdminSettings()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                    Закрыть
+                </button>
+                <button onclick="saveAdminSettings()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
                     Сохранить настройки
                 </button>
             </div>
@@ -1287,6 +1364,27 @@
             { id: 'lost', name: 'Закрыт неуспешно', color: 'red', order: 6 }
         ];
 
+        // Настройки системы
+        let leadStatuses = [
+            { id: 'new', name: 'Новый', color: 'blue' },
+            { id: 'contacted', name: 'Связались', color: 'yellow' },
+            { id: 'quoted', name: 'Отправили смету', color: 'purple' },
+            { id: 'negotiating', name: 'Переговоры', color: 'orange' },
+            { id: 'won', name: 'Закрыт успешно', color: 'green' },
+            { id: 'lost', name: 'Закрыт неуспешно', color: 'red' }
+        ];
+
+        let leadSources = [
+            { id: 'website', name: 'Сайт' },
+            { id: 'instagram', name: 'Instagram' },
+            { id: 'facebook', name: 'Facebook' },
+            { id: 'google', name: 'Google' },
+            { id: 'yandex', name: 'Яндекс' },
+            { id: 'referral', name: 'Рекомендация' },
+            { id: 'phone', name: 'Телефонный звонок' },
+            { id: 'other', name: 'Другое' }
+        ];
+
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
             // Проверяем авторизацию при загрузке
@@ -1317,6 +1415,9 @@
             
             // Initialize kanban board
             updateKanbanBoard();
+            
+            // Initialize select options
+            updateSelectOptions();
             
             // Register service worker
             if ('serviceWorker' in navigator) {
@@ -1371,8 +1472,33 @@
                     if (settingsResponse.ok) {
                         const settings = await settingsResponse.json();
                         if (settings && settings.length > 0) {
-                            globalTelegramSettings = settings[0];
-                            localStorage.setItem('ff-global-telegram-settings', JSON.stringify(globalTelegramSettings));
+                            // Загружаем настройки Telegram
+                            const telegramSettings = settings.find(s => s.setting_key === 'telegram_settings');
+                            if (telegramSettings) {
+                                globalTelegramSettings = JSON.parse(telegramSettings.setting_value);
+                                localStorage.setItem('ff-global-telegram-settings', JSON.stringify(globalTelegramSettings));
+                            }
+                            
+                            // Загружаем статусы лидов
+                            const leadStatusesSetting = settings.find(s => s.setting_key === 'lead_statuses');
+                            if (leadStatusesSetting) {
+                                leadStatuses = JSON.parse(leadStatusesSetting.setting_value);
+                                localStorage.setItem('ff-lead-statuses', JSON.stringify(leadStatuses));
+                            }
+                            
+                            // Загружаем источники лидов
+                            const leadSourcesSetting = settings.find(s => s.setting_key === 'lead_sources');
+                            if (leadSourcesSetting) {
+                                leadSources = JSON.parse(leadSourcesSetting.setting_value);
+                                localStorage.setItem('ff-lead-sources', JSON.stringify(leadSources));
+                            }
+                            
+                            // Загружаем этапы воронки
+                            const pipelineStagesSetting = settings.find(s => s.setting_key === 'pipeline_stages');
+                            if (pipelineStagesSetting) {
+                                pipelineStages = JSON.parse(pipelineStagesSetting.setting_value);
+                                localStorage.setItem('ff-pipeline-stages', JSON.stringify(pipelineStages));
+                            }
                         }
                     }
 
@@ -1384,6 +1510,9 @@
                     const savedReminders = localStorage.getItem('ff-reminders');
                     const savedUsers = localStorage.getItem('ff-users');
                     const savedSettings = localStorage.getItem('ff-global-telegram-settings');
+                    const savedLeadStatuses = localStorage.getItem('ff-lead-statuses');
+                    const savedLeadSources = localStorage.getItem('ff-lead-sources');
+                    const savedPipelineStages = localStorage.getItem('ff-pipeline-stages');
 
                     if (savedPriceDatabase) {
                         priceDatabase = JSON.parse(savedPriceDatabase);
@@ -1405,6 +1534,15 @@
                     }
                     if (savedSettings) {
                         globalTelegramSettings = JSON.parse(savedSettings);
+                    }
+                    if (savedLeadStatuses) {
+                        leadStatuses = JSON.parse(savedLeadStatuses);
+                    }
+                    if (savedLeadSources) {
+                        leadSources = JSON.parse(savedLeadSources);
+                    }
+                    if (savedPipelineStages) {
+                        pipelineStages = JSON.parse(savedPipelineStages);
                     }
 
                     console.log('📱 Данные загружены из localStorage');
@@ -2358,11 +2496,21 @@
                 
                 // Показываем/скрываем админские функции
                 const createAccountBtn = document.getElementById('createAccountBtn');
+                const adminSettingsBtn = document.getElementById('adminSettingsBtn');
+                
                 if (createAccountBtn) {
                     if (currentUser.role === 'admin') {
                         createAccountBtn.classList.remove('hidden');
                     } else {
                         createAccountBtn.classList.add('hidden');
+                    }
+                }
+                
+                if (adminSettingsBtn) {
+                    if (currentUser.role === 'admin') {
+                        adminSettingsBtn.classList.remove('hidden');
+                    } else {
+                        adminSettingsBtn.classList.add('hidden');
                     }
                 }
             }
@@ -2442,26 +2590,13 @@
         }
 
         function getStatusText(status) {
-            const texts = {
-                'new': 'Новый',
-                'contacted': 'Связались',
-                'quoted': 'Отправили смету',
-                'negotiating': 'Переговоры',
-                'won': 'Закрыт успешно',
-                'lost': 'Закрыт неуспешно'
-            };
-            return texts[status] || 'Новый';
+            const statusObj = leadStatuses.find(s => s.id === status);
+            return statusObj ? statusObj.name : 'Новый';
         }
 
         function getSourceText(source) {
-            const texts = {
-                'website': 'Сайт',
-                'referral': 'Рекомендация',
-                'cold-call': 'Холодный звонок',
-                'social': 'Социальные сети',
-                'other': 'Другое'
-            };
-            return texts[source] || 'Не указан';
+            const sourceObj = leadSources.find(s => s.id === source);
+            return sourceObj ? sourceObj.name : 'Не указан';
         }
 
         function filterLeads() {
@@ -3473,6 +3608,288 @@
 
             // Schedule notification
             scheduleReminderNotification(reminder);
+        }
+
+        // Admin Settings Functions
+        function showAdminSettings() {
+            if (!currentUser || currentUser.role !== 'admin') {
+                showNotification('Только администраторы могут изменять настройки системы', 'error');
+                return;
+            }
+            
+            loadAdminSettings();
+            document.getElementById('adminSettingsModal').classList.remove('hidden');
+        }
+
+        function hideAdminSettings() {
+            document.getElementById('adminSettingsModal').classList.add('hidden');
+        }
+
+        function loadAdminSettings() {
+            // Загружаем статусы
+            updateStatusList();
+            // Загружаем источники
+            updateSourceList();
+            // Загружаем этапы воронки
+            updatePipelineList();
+        }
+
+        function updateSelectOptions() {
+            // Обновляем селект статусов в форме добавления лида
+            const statusSelect = document.getElementById('leadStatus');
+            if (statusSelect) {
+                statusSelect.innerHTML = leadStatuses.map(status => 
+                    `<option value="${status.id}">${status.name}</option>`
+                ).join('');
+            }
+
+            // Обновляем селект источников в форме добавления лида
+            const sourceSelect = document.getElementById('leadSource');
+            if (sourceSelect) {
+                sourceSelect.innerHTML = '<option value="">Выберите источник</option>' + 
+                    leadSources.map(source => 
+                        `<option value="${source.id}">${source.name}</option>`
+                    ).join('');
+            }
+
+            // Обновляем фильтры
+            const statusFilter = document.getElementById('status-filter');
+            if (statusFilter) {
+                statusFilter.innerHTML = '<option value="">Все статусы</option>' + 
+                    leadStatuses.map(status => 
+                        `<option value="${status.id}">${status.name}</option>`
+                    ).join('');
+            }
+
+            const sourceFilter = document.getElementById('source-filter');
+            if (sourceFilter) {
+                sourceFilter.innerHTML = '<option value="">Все источники</option>' + 
+                    leadSources.map(source => 
+                        `<option value="${source.id}">${source.name}</option>`
+                    ).join('');
+            }
+        }
+
+        function updateStatusList() {
+            const container = document.getElementById('statusList');
+            container.innerHTML = leadStatuses.map(status => `
+                <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-600 rounded-lg border">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-4 h-4 rounded-full bg-${status.color}-500"></div>
+                        <span class="font-medium">${status.name}</span>
+                        <span class="text-sm text-gray-500">(${status.id})</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="editStatus('${status.id}')" class="text-blue-600 hover:text-blue-800">
+                            <i data-lucide="edit" class="h-4 w-4"></i>
+                        </button>
+                        <button onclick="deleteStatus('${status.id}')" class="text-red-600 hover:text-red-800">
+                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function updateSourceList() {
+            const container = document.getElementById('sourceList');
+            container.innerHTML = leadSources.map(source => `
+                <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-600 rounded-lg border">
+                    <div class="flex items-center space-x-3">
+                        <span class="font-medium">${source.name}</span>
+                        <span class="text-sm text-gray-500">(${source.id})</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="editSource('${source.id}')" class="text-blue-600 hover:text-blue-800">
+                            <i data-lucide="edit" class="h-4 w-4"></i>
+                        </button>
+                        <button onclick="deleteSource('${source.id}')" class="text-red-600 hover:text-red-800">
+                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function updatePipelineList() {
+            const container = document.getElementById('pipelineList');
+            container.innerHTML = pipelineStages.map(stage => `
+                <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-600 rounded-lg border">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-4 h-4 rounded-full bg-${stage.color}-500"></div>
+                        <span class="font-medium">${stage.name}</span>
+                        <span class="text-sm text-gray-500">(${stage.id})</span>
+                        <span class="text-xs bg-gray-200 dark:bg-gray-500 px-2 py-1 rounded">Порядок: ${stage.order}</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="editPipelineStage('${stage.id}')" class="text-blue-600 hover:text-blue-800">
+                            <i data-lucide="edit" class="h-4 w-4"></i>
+                        </button>
+                        <button onclick="deletePipelineStage('${stage.id}')" class="text-red-600 hover:text-red-800">
+                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addNewStatus() {
+            const name = document.getElementById('newStatusName').value.trim();
+            const color = document.getElementById('newStatusColor').value;
+            
+            if (!name) {
+                alert('Введите название статуса');
+                return;
+            }
+            
+            const id = name.toLowerCase().replace(/\s+/g, '_');
+            
+            // Проверяем, что ID уникален
+            if (leadStatuses.find(s => s.id === id)) {
+                alert('Статус с таким названием уже существует');
+                return;
+            }
+            
+            leadStatuses.push({ id, name, color });
+            updateStatusList();
+            document.getElementById('newStatusName').value = '';
+            showNotification('Статус добавлен', 'success');
+        }
+
+        function addNewSource() {
+            const name = document.getElementById('newSourceName').value.trim();
+            
+            if (!name) {
+                alert('Введите название источника');
+                return;
+            }
+            
+            const id = name.toLowerCase().replace(/\s+/g, '_');
+            
+            // Проверяем, что ID уникален
+            if (leadSources.find(s => s.id === id)) {
+                alert('Источник с таким названием уже существует');
+                return;
+            }
+            
+            leadSources.push({ id, name });
+            updateSourceList();
+            document.getElementById('newSourceName').value = '';
+            showNotification('Источник добавлен', 'success');
+        }
+
+        function addNewPipelineStage() {
+            const name = document.getElementById('newPipelineName').value.trim();
+            const color = document.getElementById('newPipelineColor').value;
+            
+            if (!name) {
+                alert('Введите название этапа');
+                return;
+            }
+            
+            const id = name.toLowerCase().replace(/\s+/g, '_');
+            const order = Math.max(...pipelineStages.map(s => s.order)) + 1;
+            
+            // Проверяем, что ID уникален
+            if (pipelineStages.find(s => s.id === id)) {
+                alert('Этап с таким названием уже существует');
+                return;
+            }
+            
+            pipelineStages.push({ id, name, color, order });
+            updatePipelineList();
+            document.getElementById('newPipelineName').value = '';
+            showNotification('Этап воронки добавлен', 'success');
+        }
+
+        function deleteStatus(statusId) {
+            if (confirm('Удалить этот статус? Лиды с этим статусом будут перенесены в статус "Новый".')) {
+                leadStatuses = leadStatuses.filter(s => s.id !== statusId);
+                updateStatusList();
+                showNotification('Статус удален', 'success');
+            }
+        }
+
+        function deleteSource(sourceId) {
+            if (confirm('Удалить этот источник? Лиды с этим источником будут перенесены в источник "Другое".')) {
+                leadSources = leadSources.filter(s => s.id !== sourceId);
+                updateSourceList();
+                showNotification('Источник удален', 'success');
+            }
+        }
+
+        function deletePipelineStage(stageId) {
+            if (confirm('Удалить этот этап воронки? Лиды с этим этапом будут перенесены в этап "Новые лиды".')) {
+                pipelineStages = pipelineStages.filter(s => s.id !== stageId);
+                updatePipelineList();
+                showNotification('Этап воронки удален', 'success');
+            }
+        }
+
+        async function saveAdminSettings() {
+            try {
+                if (isOnline) {
+                    // Сохраняем настройки на сервере
+                    const response = await fetch(`${API_BASE_URL}/settings`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            setting_key: 'lead_statuses',
+                            setting_value: JSON.stringify(leadStatuses)
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Ошибка сохранения статусов');
+                    }
+                    
+                    const response2 = await fetch(`${API_BASE_URL}/settings`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            setting_key: 'lead_sources',
+                            setting_value: JSON.stringify(leadSources)
+                        })
+                    });
+                    
+                    if (!response2.ok) {
+                        throw new Error('Ошибка сохранения источников');
+                    }
+                    
+                    const response3 = await fetch(`${API_BASE_URL}/settings`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            setting_key: 'pipeline_stages',
+                            setting_value: JSON.stringify(pipelineStages)
+                        })
+                    });
+                    
+                    if (!response3.ok) {
+                        throw new Error('Ошибка сохранения этапов воронки');
+                    }
+                }
+                
+                // Сохраняем в localStorage
+                localStorage.setItem('ff-lead-statuses', JSON.stringify(leadStatuses));
+                localStorage.setItem('ff-lead-sources', JSON.stringify(leadSources));
+                localStorage.setItem('ff-pipeline-stages', JSON.stringify(pipelineStages));
+                
+                hideAdminSettings();
+                showNotification('Настройки системы сохранены', 'success');
+                
+                // Обновляем интерфейс
+                updateLeadsTable();
+                updateKanbanBoard();
+                updateDashboard();
+                
+            } catch (error) {
+                console.error('Ошибка сохранения настроек:', error);
+                showNotification('Ошибка сохранения настроек', 'error');
+            }
         }
     </script>
 </body>
