@@ -2876,6 +2876,7 @@
             const isKanbanVisible = kanbanContent && !kanbanContent.classList.contains('hidden');
             console.log('Kanban content element:', kanbanContent);
             console.log('Is kanban visible:', isKanbanVisible);
+            console.log('Kanban content classes:', kanbanContent ? kanbanContent.className : 'not found');
             
             if (!isKanbanVisible) {
                 console.log('Kanban is hidden, skipping update');
