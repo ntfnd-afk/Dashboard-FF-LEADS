@@ -1294,6 +1294,8 @@
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
                 updateCurrentUserDisplay();
+                // Загружаем данные только если пользователь авторизован
+                loadData();
             } else {
                 // Всегда показываем форму входа
                 document.getElementById('loginModal').classList.remove('hidden');
@@ -1301,9 +1303,6 @@
             
             // Set current date
             document.getElementById('currentDate').value = new Date().toLocaleDateString('ru-RU');
-            
-            // Load data from localStorage
-            loadData();
             
             // Initialize icons
             lucide.createIcons();
@@ -2303,43 +2302,49 @@
                 return;
             }
 
-            tbody.innerHTML = leads.map(lead => `
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div>
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">${lead.clientName}</div>
-                            ${lead.contact ? `<div class="text-sm text-gray-500 dark:text-gray-400">${lead.contact}</div>` : ''}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(lead.status)}">
-                            ${getStatusText(lead.status)}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        ${getSourceText(lead.source)}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        ${new Date(lead.createdAt).toLocaleDateString('ru-RU')}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                        ${lead.totalAmount.toLocaleString('ru-RU')} ₽
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex space-x-2">
-                            <button onclick="editLead(${lead.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                                <i data-lucide="edit" class="h-4 w-4"></i>
-                            </button>
-                            <button onclick="openLeadCalculator(${lead.id})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
-                                <i data-lucide="calculator" class="h-4 w-4"></i>
-                            </button>
-                            <button onclick="deleteLead(${lead.id})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                                <i data-lucide="trash-2" class="h-4 w-4"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = leads.map(lead => {
+                const leadDate = lead.createdAt || lead.created_at || new Date();
+                const formattedDate = new Date(leadDate).toLocaleDateString('ru-RU');
+                const totalAmount = lead.totalAmount || 0;
+                
+                return `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">${lead.clientName || lead.name || 'Без имени'}</div>
+                                ${lead.contact || lead.phone ? `<div class="text-sm text-gray-500 dark:text-gray-400">${lead.contact || lead.phone}</div>` : ''}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(lead.status)}">
+                                ${getStatusText(lead.status)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${getSourceText(lead.source)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            ${formattedDate}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            ${totalAmount.toLocaleString('ru-RU')} ₽
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button onclick="editLead(${lead.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                    <i data-lucide="edit" class="h-4 w-4"></i>
+                                </button>
+                                <button onclick="openLeadCalculator(${lead.id})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                                    <i data-lucide="calculator" class="h-4 w-4"></i>
+                                </button>
+                                <button onclick="deleteLead(${lead.id})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                    <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
 
             lucide.createIcons();
         }
@@ -2411,43 +2416,49 @@
                 return;
             }
 
-            tbody.innerHTML = leadsData.map(lead => `
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div>
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">${lead.clientName}</div>
-                            ${lead.contact ? `<div class="text-sm text-gray-500 dark:text-gray-400">${lead.contact}</div>` : ''}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(lead.status)}">
-                            ${getStatusText(lead.status)}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        ${getSourceText(lead.source)}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        ${new Date(lead.createdAt).toLocaleDateString('ru-RU')}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                        ${lead.totalAmount.toLocaleString('ru-RU')} ₽
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex space-x-2">
-                            <button onclick="editLead(${lead.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                                <i data-lucide="edit" class="h-4 w-4"></i>
-                            </button>
-                            <button onclick="openLeadCalculator(${lead.id})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
-                                <i data-lucide="calculator" class="h-4 w-4"></i>
-                            </button>
-                            <button onclick="deleteLead(${lead.id})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                                <i data-lucide="trash-2" class="h-4 w-4"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = leadsData.map(lead => {
+                const leadDate = lead.createdAt || lead.created_at || new Date();
+                const formattedDate = new Date(leadDate).toLocaleDateString('ru-RU');
+                const totalAmount = lead.totalAmount || 0;
+                
+                return `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">${lead.clientName || lead.name || 'Без имени'}</div>
+                                ${lead.contact || lead.phone ? `<div class="text-sm text-gray-500 dark:text-gray-400">${lead.contact || lead.phone}</div>` : ''}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(lead.status)}">
+                                ${getStatusText(lead.status)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${getSourceText(lead.source)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            ${formattedDate}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            ${totalAmount.toLocaleString('ru-RU')} ₽
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button onclick="editLead(${lead.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                    <i data-lucide="edit" class="h-4 w-4"></i>
+                                </button>
+                                <button onclick="openLeadCalculator(${lead.id})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                                    <i data-lucide="calculator" class="h-4 w-4"></i>
+                                </button>
+                                <button onclick="deleteLead(${lead.id})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                    <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
 
             lucide.createIcons();
         }
@@ -2464,11 +2475,11 @@
             if (!lead) return;
 
             // Fill form with lead data
-            document.getElementById('leadClientName').value = lead.clientName;
-            document.getElementById('leadContact').value = lead.contact;
-            document.getElementById('leadSource').value = lead.source;
-            document.getElementById('leadStatus').value = lead.status;
-            document.getElementById('leadComments').value = lead.comments;
+            document.getElementById('leadClientName').value = lead.clientName || lead.name || '';
+            document.getElementById('leadContact').value = lead.contact || lead.phone || '';
+            document.getElementById('leadSource').value = lead.source || '';
+            document.getElementById('leadStatus').value = lead.status || 'new';
+            document.getElementById('leadComments').value = lead.comments || lead.notes || '';
             document.getElementById('createCalculation').checked = false;
 
             showAddLeadModal();
@@ -2497,7 +2508,7 @@
             showTab('calculator');
             
             // Load lead data into calculator
-            document.getElementById('clientName').value = lead.clientName;
+            document.getElementById('clientName').value = lead.clientName || lead.name || '';
             
             // If lead has calculation, load it
             if (lead.calculationId) {
@@ -2547,7 +2558,12 @@
 
         function updateRecentLeads() {
             const recentLeads = leads
-                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .filter(lead => lead && lead.clientName) // Фильтруем пустые лиды
+                .sort((a, b) => {
+                    const dateA = new Date(a.createdAt || a.created_at || new Date());
+                    const dateB = new Date(b.createdAt || b.created_at || new Date());
+                    return dateB - dateA;
+                })
                 .slice(0, 5);
 
             const container = document.getElementById('recent-leads');
@@ -2556,17 +2572,22 @@
                 return;
             }
 
-            container.innerHTML = recentLeads.map(lead => `
-                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div>
-                        <div class="font-medium text-gray-900 dark:text-white">${lead.clientName}</div>
-                        <div class="text-sm text-gray-500 dark:text-gray-400">${getSourceText(lead.source)} • ${new Date(lead.createdAt).toLocaleDateString('ru-RU')}</div>
+            container.innerHTML = recentLeads.map(lead => {
+                const leadDate = lead.createdAt || lead.created_at || new Date();
+                const formattedDate = new Date(leadDate).toLocaleDateString('ru-RU');
+                
+                return `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div>
+                            <div class="font-medium text-gray-900 dark:text-white">${lead.clientName || lead.name || 'Без имени'}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">${getSourceText(lead.source)} • ${formattedDate}</div>
+                        </div>
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(lead.status)}">
+                            ${getStatusText(lead.status)}
+                        </span>
                     </div>
-                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(lead.status)}">
-                        ${getStatusText(lead.status)}
-                    </span>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Kanban Board Functions
