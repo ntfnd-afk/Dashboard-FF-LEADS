@@ -301,11 +301,13 @@ function updateGlobalRemindersList() {
     console.log('Предстоящие напоминания:', upcomingReminders.length);
 
     if (upcomingReminders.length === 0) {
+        console.log('Нет предстоящих напоминаний, показываем пустое сообщение');
         globalRemindersList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-sm text-center py-4">Нет предстоящих напоминаний</p>';
         return;
     }
 
-    globalRemindersList.innerHTML = upcomingReminders.map(reminder => {
+    console.log('Отображаем предстоящие напоминания:', upcomingReminders);
+    const htmlContent = upcomingReminders.map(reminder => {
         // Используем локальное время для отображения
         const reminderDate = reminder.localDateTime ? new Date(reminder.localDateTime) : new Date(reminder.datetime);
         const now = new Date();
@@ -335,11 +337,27 @@ function updateGlobalRemindersList() {
     }).join('');
 
     lucide.createIcons();
+    
+    // Отладка после обновления
+    setTimeout(() => {
+        console.log('=== ПОСЛЕ ОБНОВЛЕНИЯ UI ===');
+        console.log('Содержимое globalRemindersList:', document.getElementById('globalRemindersList')?.innerHTML);
+        console.log('==========================');
+    }, 100);
 }
 
-// ========================================
-// NOTIFICATION FUNCTIONS
-// ========================================
+// Функция для отладки напоминаний
+function debugReminders() {
+    console.log('=== ОТЛАДКА НАПОМИНАНИЙ ===');
+    console.log('Всего напоминаний:', reminders.length);
+    console.log('Активные напоминания:', reminders.filter(r => !r.completed).length);
+    console.log('Элемент globalRemindersList:', document.getElementById('globalRemindersList'));
+    console.log('Содержимое элемента:', document.getElementById('globalRemindersList')?.innerHTML);
+    console.log('========================');
+}
+
+// Добавляем функцию в глобальную область
+window.debugReminders = debugReminders;
 
 function scheduleReminderNotification(reminder) {
     // Используем локальное время для планирования
