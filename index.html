@@ -2868,6 +2868,8 @@
         function updateKanbanBoard() {
             console.log('Updating Kanban board with leads:', leads);
             console.log('Pipeline stages:', pipelineStages);
+            console.log('Pipeline stage IDs:', pipelineStages.map(s => s.id));
+            console.log('Lead statuses:', leads.map(l => ({id: l.id, status: l.status})));
             
             // Update counts for each stage
             pipelineStages.forEach(stage => {
