@@ -2175,6 +2175,7 @@
 
         // Lead Management Functions
         function showAddLeadModal() {
+            updateSelectOptions(); // Обновляем селекты перед показом модального окна
             document.getElementById('addLeadModal').classList.remove('hidden');
         }
 
@@ -3943,6 +3944,7 @@
                 showNotification('Настройки системы сохранены', 'success');
                 
                 // Обновляем интерфейс
+                updateSelectOptions(); // Обновляем селекты в формах
                 updateLeadsTable();
                 updateKanbanBoard();
                 updateDashboard();
