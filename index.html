@@ -34,9 +34,6 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
-    <!-- Google Sheets API -->
-    <script src="google-sheets-api.js"></script>
-    
     <style>
         .hidden { display: none !important; }
         .modal-overlay {
@@ -1266,7 +1263,7 @@
         };
 
         // API Configuration
-        const API_BASE_URL = 'http://51.250.97.39:3001/api';
+        const API_BASE_URL = 'https://api.fulfilment-one.ru/api';
         let isOnline = navigator.onLine;
 
         // Проверка подключения
@@ -1946,26 +1943,24 @@
         }
 
         // Автоматическая синхронизация при загрузке приложения
-        async function autoSyncOnLoad() {
-            gsAPI.loadSettings();
-            
-            if (gsAPI.isConfigured) {
-                try {
-                    const data = await gsAPI.fetchData();
-                    if (data.length > 0) {
-                        priceDatabase = data;
-                        updatePriceDatabaseTable();
-                        saveData();
-                        console.log(`Автоматически загружено ${data.length} услуг из Google Sheets`);
-                    }
-                } catch (error) {
-                    console.warn('Не удалось выполнить автоматическую синхронизацию:', error.message);
-                }
-            }
-        }
-
-        // Вызываем автоматическую синхронизацию после загрузки данных
-        setTimeout(autoSyncOnLoad, 1000);
+        // Google Sheets auto-sync отключен (используется API сервер)
+        // async function autoSyncOnLoad() {
+        //     gsAPI.loadSettings();
+        //     if (gsAPI.isConfigured) {
+        //         try {
+        //             const data = await gsAPI.fetchData();
+        //             if (data.length > 0) {
+        //                 priceDatabase = data;
+        //                 updatePriceDatabaseTable();
+        //                 saveData();
+        //                 console.log(`Автоматически загружено ${data.length} услуг из Google Sheets`);
+        //             }
+        //         } catch (error) {
+        //             console.warn('Не удалось выполнить автоматическую синхронизацию:', error.message);
+        //         }
+        //     }
+        // }
+        // setTimeout(autoSyncOnLoad, 1000);
 
         // Tab Management Functions
         function showTab(tabName) {
