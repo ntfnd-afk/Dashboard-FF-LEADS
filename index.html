@@ -1468,6 +1468,13 @@
 
                     if (leadsResponse.ok) {
                         leads = await leadsResponse.json();
+                        // Нормализуем поля лидов для совместимости
+                        leads = leads.map(lead => ({
+                            ...lead,
+                            clientName: lead.client_name || lead.clientName || lead.name,
+                            contact: lead.phone || lead.contact,
+                            comments: lead.notes || lead.comments
+                        }));
                         localStorage.setItem('ff-leads', JSON.stringify(leads));
                     }
                     if (remindersResponse.ok) {
@@ -2839,6 +2846,7 @@
         // Kanban Board Functions
         function updateKanbanBoard() {
             console.log('Updating Kanban board with leads:', leads);
+            console.log('Pipeline stages:', pipelineStages);
             
             // Update counts for each stage
             pipelineStages.forEach(stage => {
@@ -2854,6 +2862,7 @@
                 const columnElement = document.getElementById(`${stage.id}-leads-column`);
                 if (columnElement) {
                     const stageLeads = leads.filter(lead => lead.status === stage.id);
+                    console.log(`Stage ${stage.id} has ${stageLeads.length} leads:`, stageLeads);
                     if (stageLeads.length === 0) {
                         columnElement.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Нет лидов</p>';
                     } else {
