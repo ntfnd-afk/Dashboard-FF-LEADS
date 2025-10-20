@@ -528,7 +528,7 @@
     <div id="addLeadModal" class="modal-overlay hidden">
         <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 id="addLeadModalTitle" class="text-lg font-semibold text-gray-900 dark:text-white">
                     Добавить новый лид
                 </h3>
                 <button onclick="hideAddLeadModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -1433,6 +1433,12 @@
             // Initialize select options
             updateSelectOptions();
             
+            // Восстанавливаем активную вкладку
+            const savedTab = localStorage.getItem('ff-active-tab');
+            if (savedTab) {
+                showTab(savedTab);
+            }
+            
             // Register service worker
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('sw.js');
@@ -2170,6 +2176,9 @@
             
             currentTab = tabName;
             
+            // Сохраняем активную вкладку в localStorage
+            localStorage.setItem('ff-active-tab', tabName);
+            
             // Update content based on tab
             if (tabName === 'dashboard') {
                 updateDashboard();
@@ -2183,6 +2192,17 @@
         // Lead Management Functions
         function showAddLeadModal() {
             updateSelectOptions(); // Обновляем селекты перед показом модального окна
+            
+            // Проверяем, редактируем ли мы лид
+            const editingId = document.getElementById('addLeadModal').getAttribute('data-editing-id');
+            const titleElement = document.getElementById('addLeadModalTitle');
+            
+            if (editingId) {
+                titleElement.textContent = 'Редактирование лида';
+            } else {
+                titleElement.textContent = 'Добавить новый лид';
+            }
+            
             document.getElementById('addLeadModal').classList.remove('hidden');
         }
 
@@ -2711,18 +2731,19 @@
             const lead = leads.find(l => l.id === leadId);
             if (!lead) return;
 
-            // Fill form with lead data
+            // Store lead ID for editing
+            document.getElementById('addLeadModal').setAttribute('data-editing-id', leadId);
+            
+            // Show modal first to update select options
+            showAddLeadModal();
+            
+            // Fill form with lead data AFTER select options are updated
             document.getElementById('leadClientName').value = lead.clientName || lead.name || '';
             document.getElementById('leadContact').value = lead.contact || lead.phone || '';
             document.getElementById('leadSource').value = lead.source || '';
             document.getElementById('leadStatus').value = lead.status || 'new';
             document.getElementById('leadComments').value = lead.comments || lead.notes || '';
             document.getElementById('createCalculation').checked = false;
-
-            showAddLeadModal();
-            
-            // Store lead ID for editing
-            document.getElementById('addLeadModal').setAttribute('data-editing-id', leadId);
         }
 
         async function deleteLead(leadId) {
@@ -2860,14 +2881,19 @@
             // Update columns with lead cards
             pipelineStages.forEach(stage => {
                 const columnElement = document.getElementById(`${stage.id}-leads-column`);
+                console.log(`Looking for column element: ${stage.id}-leads-column`, columnElement);
                 if (columnElement) {
                     const stageLeads = leads.filter(lead => lead.status === stage.id);
                     console.log(`Stage ${stage.id} has ${stageLeads.length} leads:`, stageLeads);
                     if (stageLeads.length === 0) {
                         columnElement.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Нет лидов</p>';
                     } else {
-                        columnElement.innerHTML = stageLeads.map(lead => createLeadCard(lead)).join('');
+                        const cardsHTML = stageLeads.map(lead => createLeadCard(lead)).join('');
+                        console.log(`Generated HTML for stage ${stage.id}:`, cardsHTML);
+                        columnElement.innerHTML = cardsHTML;
                     }
+                } else {
+                    console.error(`Column element not found: ${stage.id}-leads-column`);
                 }
             });
 
@@ -2876,13 +2902,14 @@
         }
 
         function createLeadCard(lead) {
+            console.log('Creating card for lead:', lead);
             const hasReminders = reminders.some(r => r.leadId === lead.id && !r.completed);
             const reminderCount = reminders.filter(r => r.leadId === lead.id && !r.completed).length;
             const clientName = lead.clientName || lead.name || 'Без имени';
             const contact = lead.contact || lead.phone || '';
             const totalAmount = lead.totalAmount || 0;
 
-            return `
+            const cardHTML = `
                 <div class="kanban-card" draggable="true" ondragstart="dragStart(event, ${lead.id})" onclick="openLeadDetails(${lead.id})">
                     <div class="flex items-start justify-between mb-2">
                         <div class="font-medium text-sm text-gray-900 dark:text-white truncate">${clientName}</div>
@@ -2903,6 +2930,9 @@
                     </div>
                 </div>
             `;
+            
+            console.log('Generated card HTML:', cardHTML);
+            return cardHTML;
         }
 
         function dragStart(event, leadId) {
