@@ -3,17 +3,17 @@
 // ========================================
 
 // Global variables
-let priceDatabase = [];
-let calculationItems = [];
-let nextItemId = 1;
-let leads = [];
-let nextLeadId = 1;
-let currentTab = 'dashboard';
-let reminders = [];
-let nextReminderId = 1;
-let currentUser = null;
-let users = [];
-let globalTelegramSettings = {
+var priceDatabase = [];
+var calculationItems = [];
+var nextItemId = 1;
+var leads = [];
+var nextLeadId = 1;
+var currentTab = 'dashboard';
+var reminders = [];
+var nextReminderId = 1;
+var currentUser = null;
+var users = [];
+var globalTelegramSettings = {
     botToken: '',
     chatType: 'personal', // 'personal' or 'group'
     chatId: '', // for personal messages
@@ -22,8 +22,9 @@ let globalTelegramSettings = {
 };
 
 // API Configuration
-const API_BASE_URL = 'https://api.fulfilment-one.ru/api';
-let isOnline = navigator.onLine;
+var API_BASE_URL = 'https://api.fulfilment-one.ru/api'; // Продакшн
+// var API_BASE_URL = 'http://localhost:3000/api'; // Локальная разработка
+var isOnline = navigator.onLine;
 
 // Проверка подключения
 window.addEventListener('online', () => {
@@ -39,7 +40,7 @@ window.addEventListener('offline', () => {
 });
 
 // Настройки системы
-let leadStatuses = [
+var leadStatuses = [
     { id: 'new', name: 'Новый', color: 'blue' },
     { id: 'contacted', name: 'Связались', color: 'yellow' },
     { id: 'quoted', name: 'Отправили смету', color: 'purple' },
@@ -48,7 +49,7 @@ let leadStatuses = [
     { id: 'lost', name: 'Закрыт неуспешно', color: 'red' }
 ];
 
-let leadSources = [
+var leadSources = [
     { id: 'website', name: 'Сайт' },
     { id: 'instagram', name: 'Instagram' },
     { id: 'facebook', name: 'Facebook' },
@@ -59,9 +60,24 @@ let leadSources = [
     { id: 'other', name: 'Другое' }
 ];
 
+var pipelineStages = [
+    { id: 'new', name: 'Новые лиды', color: 'blue', order: 1 },
+    { id: 'contacted', name: 'Связались', color: 'yellow', order: 2 },
+    { id: 'quoted', name: 'Отправили смету', color: 'purple', order: 3 },
+    { id: 'negotiating', name: 'Переговоры', color: 'orange', order: 4 },
+    { id: 'won', name: 'Закрыт успешно', color: 'green', order: 5 },
+    { id: 'lost', name: 'Закрыт неуспешно', color: 'red', order: 6 }
+];
+
 // Услуги фулфилмента
-let services = [];
-let importServicesData = null; // Данные для импорта услуг
+var services = [
+    { id: 1, name: 'Упаковка', price: 50, unit: 'шт' },
+    { id: 2, name: 'Хранение', price: 10, unit: 'день' },
+    { id: 3, name: 'Доставка', price: 200, unit: 'заказ' },
+    { id: 4, name: 'Маркировка', price: 25, unit: 'шт' },
+    { id: 5, name: 'Сортировка', price: 30, unit: 'кг' }
+];
+var importServicesData = null; // Данные для импорта услуг
 
 // ========================================
 // UTILITY FUNCTIONS
@@ -411,11 +427,16 @@ function initializeApp() {
     }
 
     // Инициализируем иконки Lucide
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 
     // Устанавливаем текущую дату
     const currentDate = new Date().toLocaleDateString('ru-RU');
-    document.getElementById('currentDate').value = currentDate;
+    const currentDateElement = document.getElementById('currentDate');
+    if (currentDateElement) {
+        currentDateElement.value = currentDate;
+    }
 }
 
 // ========================================
@@ -440,6 +461,7 @@ window.FFApp = {
     isOnline,
     leadStatuses,
     leadSources,
+    pipelineStages,
     services,
     importServicesData,
     

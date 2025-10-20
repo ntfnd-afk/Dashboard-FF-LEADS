@@ -328,3 +328,18 @@ window.FFKanban = {
     savePipelineSettings,
     getStatusColorClass
 };
+
+// Make functions available globally for onclick attributes
+window.updateKanbanBoard = updateKanbanBoard;
+window.createLeadCard = createLeadCard;
+window.dragStart = dragStart;
+window.allowDrop = allowDrop;
+window.drop = drop;
+window.showPipelineSettings = showPipelineSettings;
+window.hidePipelineSettings = hidePipelineSettings;
+window.updatePipelineStagesDisplay = updatePipelineStagesDisplay;
+window.updatePipelineStage = updatePipelineStage;
+window.addPipelineStage = addPipelineStage;
+window.removePipelineStage = removePipelineStage;
+window.savePipelineSettings = savePipelineSettings;
+window.getStatusColorClass = getStatusColorClass;

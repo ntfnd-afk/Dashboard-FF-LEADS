@@ -416,18 +416,79 @@
 
             <!-- Kanban Tab Content -->
             <div id="kanban-content" class="tab-content hidden">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
                     <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Воронка продаж</h2>
-                        <button onclick="showPipelineSettings()" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                            <i data-lucide="settings" class="h-4 w-4 mr-2"></i>
-                            Настройки воронки
-                        </button>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                            Канбан воронки продаж
+                        </h2>
+                        <div class="flex space-x-4">
+                            <button onclick="showAddReminderModal()" class="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                                <i data-lucide="bell-plus" class="h-4 w-4 mr-2"></i>
+                                Добавить напоминание
+                            </button>
+                            <button onclick="showPipelineSettings()" class="flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+                                <i data-lucide="settings" class="h-4 w-4 mr-2"></i>
+                                Настройки воронки
+                            </button>
+                        </div>
                     </div>
-
-                    <div class="overflow-x-auto">
-                        <div class="flex space-x-6 min-w-max">
-                            <!-- Kanban columns will be populated by JavaScript -->
+                    
+                    <!-- Pipeline Stages -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+                        <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg" ondrop="drop(event, 'new')" ondragover="allowDrop(event)">
+                            <h3 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">Новые лиды</h3>
+                            <div class="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-2" id="new-leads-count">0</div>
+                            <div id="new-leads-column" class="space-y-2 min-h-[200px]">
+                                <!-- Lead cards will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div class="bg-yellow-50 dark:bg-yellow-900 p-4 rounded-lg" ondrop="drop(event, 'contacted')" ondragover="allowDrop(event)">
+                            <h3 class="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">Связались</h3>
+                            <div class="text-2xl font-bold text-yellow-900 dark:text-yellow-100 mb-2" id="contacted-leads-count">0</div>
+                            <div id="contacted-leads-column" class="space-y-2 min-h-[200px]">
+                                <!-- Lead cards will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div class="bg-purple-50 dark:bg-purple-900 p-4 rounded-lg" ondrop="drop(event, 'quoted')" ondragover="allowDrop(event)">
+                            <h3 class="font-semibold text-purple-900 dark:text-purple-100 mb-2">Отправили смету</h3>
+                            <div class="text-2xl font-bold text-purple-900 dark:text-purple-100 mb-2" id="quoted-leads-count">0</div>
+                            <div id="quoted-leads-column" class="space-y-2 min-h-[200px]">
+                                <!-- Lead cards will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div class="bg-orange-50 dark:bg-orange-900 p-4 rounded-lg" ondrop="drop(event, 'negotiating')" ondragover="allowDrop(event)">
+                            <h3 class="font-semibold text-orange-900 dark:text-orange-100 mb-2">Переговоры</h3>
+                            <div class="text-2xl font-bold text-orange-900 dark:text-orange-100 mb-2" id="negotiating-leads-count">0</div>
+                            <div id="negotiating-leads-column" class="space-y-2 min-h-[200px]">
+                                <!-- Lead cards will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 dark:bg-green-900 p-4 rounded-lg" ondrop="drop(event, 'won')" ondragover="allowDrop(event)">
+                            <h3 class="font-semibold text-green-900 dark:text-green-100 mb-2">Закрыт успешно</h3>
+                            <div class="text-2xl font-bold text-green-900 dark:text-green-100 mb-2" id="won-leads-count">0</div>
+                            <div id="won-leads-column" class="space-y-2 min-h-[200px]">
+                                <!-- Lead cards will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div class="bg-red-50 dark:bg-red-900 p-4 rounded-lg" ondrop="drop(event, 'lost')" ondragover="allowDrop(event)">
+                            <h3 class="font-semibold text-red-900 dark:text-red-100 mb-2">Закрыт неуспешно</h3>
+                            <div class="text-2xl font-bold text-red-900 dark:text-red-100 mb-2" id="lost-leads-count">0</div>
+                            <div id="lost-leads-column" class="space-y-2 min-h-[200px]">
+                                <!-- Lead cards will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Reminders Section -->
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Активные напоминания</h3>
+                        <div id="reminders-list" class="space-y-2">
+                            <!-- Reminders will be populated here -->
                         </div>
                     </div>
                 </div>
@@ -1040,37 +1101,72 @@
     </button>
 
     <!-- Load JavaScript Modules -->
-    <script type="module" src="js/app.js"></script>
-    <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/leads.js"></script>
-    <script type="module" src="js/dashboard.js"></script>
-    <script type="module" src="js/kanban.js"></script>
-    <script type="module" src="js/calculator.js"></script>
-    <script type="module" src="js/services.js"></script>
-    <script type="module" src="js/admin.js"></script>
-    <script type="module" src="js/reminders.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/leads.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/kanban.js"></script>
+    <script src="js/calculator.js"></script>
+    <script src="js/services.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/reminders.js"></script>
 
     <!-- Initialize Application -->
-    <script type="module">
-        import { initializeApp } from './js/app.js';
-        
-        // Initialize app after DOM is loaded
+    <script>
+        // Initialize app after all modules are loaded
         document.addEventListener('DOMContentLoaded', function() {
             // Инициализируем приложение
-            initializeApp();
+            if (typeof initializeApp === 'function') {
+                initializeApp();
+            } else {
+                console.error('initializeApp function not found');
+                
+                // Fallback инициализация
+                console.log('Running fallback initialization...');
+                
+                // Проверяем авторизацию при загрузке
+                const savedUser = localStorage.getItem('ff-current-user');
+                if (savedUser) {
+                    currentUser = JSON.parse(savedUser);
+                    // Скрываем модальное окно входа если пользователь авторизован
+                    document.getElementById('loginModal').classList.add('hidden');
+                    
+                    // Показываем кнопку админ настроек для админов
+                    if (currentUser.role === 'admin') {
+                        document.getElementById('adminSettingsBtn').style.display = 'block';
+                    }
+                } else {
+                    // Показываем модальное окно входа
+                    document.getElementById('loginModal').classList.remove('hidden');
+                }
+                
+                // Загружаем данные
+                if (typeof loadData === 'function') {
+                    loadData();
+                }
+                
+                // Восстанавливаем активную вкладку
+                const savedTab = localStorage.getItem('ff-active-tab');
+                if (savedTab && typeof showTab === 'function') {
+                    showTab(savedTab);
+                }
+            }
 
             // Register service worker
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('sw.js');
             }
 
+            // Инициализируем иконки Lucide
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+
             // Добавляем обработчик для файлового инпута услуг
-            import('./js/services.js').then(module => {
-                const fileInput = document.getElementById('servicesFileInput');
-                if (fileInput && module.handleFileSelect) {
-                    fileInput.addEventListener('change', module.handleFileSelect);
-                }
-            });
+            const fileInput = document.getElementById('servicesFileInput');
+            if (fileInput && typeof handleFileSelect === 'function') {
+                fileInput.addEventListener('change', handleFileSelect);
+            }
 
             // Функция для переключения полей Telegram
             window.toggleTelegramChatFields = function() {
