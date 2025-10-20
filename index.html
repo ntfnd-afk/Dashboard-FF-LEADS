@@ -1487,30 +1487,30 @@
                         const settings = await settingsResponse.json();
                         if (settings && settings.length > 0) {
                             // Загружаем настройки Telegram
-                            const telegramSettings = settings.find(s => s.setting_key === 'telegram_settings');
+                            const telegramSettings = settings.find(s => s.key === 'telegram_settings');
                             if (telegramSettings) {
-                                globalTelegramSettings = JSON.parse(telegramSettings.setting_value);
+                                globalTelegramSettings = JSON.parse(telegramSettings.value);
                                 localStorage.setItem('ff-global-telegram-settings', JSON.stringify(globalTelegramSettings));
                             }
                             
                             // Загружаем статусы лидов
-                            const leadStatusesSetting = settings.find(s => s.setting_key === 'lead_statuses');
+                            const leadStatusesSetting = settings.find(s => s.key === 'lead_statuses');
                             if (leadStatusesSetting) {
-                                leadStatuses = JSON.parse(leadStatusesSetting.setting_value);
+                                leadStatuses = JSON.parse(leadStatusesSetting.value);
                                 localStorage.setItem('ff-lead-statuses', JSON.stringify(leadStatuses));
                             }
                             
                             // Загружаем источники лидов
-                            const leadSourcesSetting = settings.find(s => s.setting_key === 'lead_sources');
+                            const leadSourcesSetting = settings.find(s => s.key === 'lead_sources');
                             if (leadSourcesSetting) {
-                                leadSources = JSON.parse(leadSourcesSetting.setting_value);
+                                leadSources = JSON.parse(leadSourcesSetting.value);
                                 localStorage.setItem('ff-lead-sources', JSON.stringify(leadSources));
                             }
                             
                             // Загружаем этапы воронки
-                            const pipelineStagesSetting = settings.find(s => s.setting_key === 'pipeline_stages');
+                            const pipelineStagesSetting = settings.find(s => s.key === 'pipeline_stages');
                             if (pipelineStagesSetting) {
-                                pipelineStages = JSON.parse(pipelineStagesSetting.setting_value);
+                                pipelineStages = JSON.parse(pipelineStagesSetting.value);
                                 localStorage.setItem('ff-pipeline-stages', JSON.stringify(pipelineStages));
                             }
                         }
@@ -3426,8 +3426,8 @@
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            setting_key: 'telegram_settings',
-                            setting_value: JSON.stringify(globalTelegramSettings)
+                            key: 'telegram_settings',
+                            value: JSON.stringify(globalTelegramSettings)
                         })
                     });
                     
@@ -3898,8 +3898,8 @@
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            setting_key: 'lead_statuses',
-                            setting_value: JSON.stringify(leadStatuses)
+                            key: 'lead_statuses',
+                            value: JSON.stringify(leadStatuses)
                         })
                     });
                     
@@ -3911,8 +3911,8 @@
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            setting_key: 'lead_sources',
-                            setting_value: JSON.stringify(leadSources)
+                            key: 'lead_sources',
+                            value: JSON.stringify(leadSources)
                         })
                     });
                     
@@ -3924,8 +3924,8 @@
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            setting_key: 'pipeline_stages',
-                            setting_value: JSON.stringify(pipelineStages)
+                            key: 'pipeline_stages',
+                            value: JSON.stringify(pipelineStages)
                         })
                     });
                     
