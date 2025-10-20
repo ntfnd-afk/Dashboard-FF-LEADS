@@ -35,18 +35,40 @@ async function addReminder() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/reminders`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+        if (isOnline) {
+            const response = await fetch(`${API_BASE_URL}/reminders`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: text,
+                    datetime: reminderDateTime.toISOString(),
+                    user_id: currentUser ? currentUser.id : null
+                })
+            });
+
+            if (response.ok) {
+                const newReminder = await response.json();
+                reminders.push(newReminder);
+                localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+                
+                hideAddReminderModal();
+                updateRemindersList();
+                updateGlobalRemindersList();
+                scheduleReminderNotification(newReminder);
+                
+                showNotification('Напоминание добавлено', 'success');
+            } else {
+                throw new Error('Ошибка сохранения напоминания');
+            }
+        } else {
+            // Офлайн режим - сохраняем в localStorage
+            const newReminder = {
+                id: Date.now(),
                 text: text,
                 datetime: reminderDateTime.toISOString(),
-                user_id: currentUser ? currentUser.id : null
-            })
-        });
-
-        if (response.ok) {
-            const newReminder = await response.json();
+                user_id: currentUser ? currentUser.id : null,
+                completed: false
+            };
             reminders.push(newReminder);
             localStorage.setItem('ff-reminders', JSON.stringify(reminders));
             
@@ -55,9 +77,7 @@ async function addReminder() {
             updateGlobalRemindersList();
             scheduleReminderNotification(newReminder);
             
-            showNotification('Напоминание добавлено', 'success');
-        } else {
-            throw new Error('Ошибка сохранения напоминания');
+            showNotification('Напоминание добавлено (офлайн)', 'success');
         }
     } catch (error) {
         console.error('Ошибка добавления напоминания:', error);
@@ -77,13 +97,29 @@ function addReminderForLead(leadId) {
 
 async function completeReminder(reminderId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ completed: true })
-        });
+        if (isOnline) {
+            const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ completed: true })
+            });
 
-        if (response.ok) {
+            if (response.ok) {
+                const reminder = reminders.find(r => r.id === reminderId);
+                if (reminder) {
+                    reminder.completed = true;
+                }
+                
+                localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+                updateRemindersList();
+                updateGlobalRemindersList();
+                
+                showNotification('Напоминание выполнено', 'success');
+            } else {
+                throw new Error('Ошибка обновления напоминания');
+            }
+        } else {
+            // Офлайн режим - обновляем в localStorage
             const reminder = reminders.find(r => r.id === reminderId);
             if (reminder) {
                 reminder.completed = true;
@@ -93,9 +129,7 @@ async function completeReminder(reminderId) {
             updateRemindersList();
             updateGlobalRemindersList();
             
-            showNotification('Напоминание выполнено', 'success');
-        } else {
-            throw new Error('Ошибка обновления напоминания');
+            showNotification('Напоминание выполнено (офлайн)', 'success');
         }
     } catch (error) {
         console.error('Ошибка выполнения напоминания:', error);
@@ -107,19 +141,29 @@ async function deleteReminder(reminderId) {
     if (!confirm('Вы уверены, что хотите удалить это напоминание?')) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
-            method: 'DELETE'
-        });
+        if (isOnline) {
+            const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
+                method: 'DELETE'
+            });
 
-        if (response.ok) {
+            if (response.ok) {
+                reminders = reminders.filter(r => r.id !== reminderId);
+                localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+                updateRemindersList();
+                updateGlobalRemindersList();
+                
+                showNotification('Напоминание удалено', 'success');
+            } else {
+                throw new Error('Ошибка удаления напоминания');
+            }
+        } else {
+            // Офлайн режим - удаляем из localStorage
             reminders = reminders.filter(r => r.id !== reminderId);
             localStorage.setItem('ff-reminders', JSON.stringify(reminders));
             updateRemindersList();
             updateGlobalRemindersList();
             
-            showNotification('Напоминание удалено', 'success');
-        } else {
-            throw new Error('Ошибка удаления напоминания');
+            showNotification('Напоминание удалено (офлайн)', 'success');
         }
     } catch (error) {
         console.error('Ошибка удаления напоминания:', error);
