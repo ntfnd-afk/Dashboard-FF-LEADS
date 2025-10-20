@@ -1343,21 +1343,37 @@
             try {
                 if (isOnline) {
                     // Загружаем данные из API
-                    const [leadsResponse, pricesResponse, usersResponse] = await Promise.all([
+                    const [leadsResponse, remindersResponse, pricesResponse, usersResponse, settingsResponse] = await Promise.all([
                         fetch(`${API_BASE_URL}/leads`),
+                        fetch(`${API_BASE_URL}/reminders`),
                         fetch(`${API_BASE_URL}/prices`),
-                        fetch(`${API_BASE_URL}/users`)
+                        fetch(`${API_BASE_URL}/users`),
+                        fetch(`${API_BASE_URL}/settings`)
                     ]);
 
                     if (leadsResponse.ok) {
                         leads = await leadsResponse.json();
+                        localStorage.setItem('ff-leads', JSON.stringify(leads));
+                    }
+                    if (remindersResponse.ok) {
+                        reminders = await remindersResponse.json();
+                        localStorage.setItem('ff-reminders', JSON.stringify(reminders));
                     }
                     if (pricesResponse.ok) {
                         priceDatabase = await pricesResponse.json();
+                        localStorage.setItem('ff-price-database', JSON.stringify(priceDatabase));
                         updatePriceDatabaseTable();
                     }
                     if (usersResponse.ok) {
                         users = await usersResponse.json();
+                        localStorage.setItem('ff-users', JSON.stringify(users));
+                    }
+                    if (settingsResponse.ok) {
+                        const settings = await settingsResponse.json();
+                        if (settings && settings.length > 0) {
+                            globalTelegramSettings = settings[0];
+                            localStorage.setItem('ff-global-telegram-settings', JSON.stringify(globalTelegramSettings));
+                        }
                     }
 
                     console.log('✅ Данные загружены из БД');
@@ -1365,7 +1381,9 @@
                     // Загружаем из localStorage
                     const savedPriceDatabase = localStorage.getItem('ff-price-database');
                     const savedLeads = localStorage.getItem('ff-leads');
+                    const savedReminders = localStorage.getItem('ff-reminders');
                     const savedUsers = localStorage.getItem('ff-users');
+                    const savedSettings = localStorage.getItem('ff-global-telegram-settings');
 
                     if (savedPriceDatabase) {
                         priceDatabase = JSON.parse(savedPriceDatabase);
@@ -1374,6 +1392,9 @@
                     if (savedLeads) {
                         leads = JSON.parse(savedLeads);
                     }
+                    if (savedReminders) {
+                        reminders = JSON.parse(savedReminders);
+                    }
                     if (savedUsers) {
                         users = JSON.parse(savedUsers);
                         // Если есть пользователи, делаем первого текущим
@@ -1381,6 +1402,9 @@
                             currentUser = users[0];
                             updateCurrentUserDisplay();
                         }
+                    }
+                    if (savedSettings) {
+                        globalTelegramSettings = JSON.parse(savedSettings);
                     }
 
                     console.log('📱 Данные загружены из localStorage');
@@ -2011,6 +2035,8 @@
             document.getElementById('leadStatus').value = 'new';
             document.getElementById('leadComments').value = '';
             document.getElementById('createCalculation').checked = false;
+            // Очищаем атрибут редактирования
+            document.getElementById('addLeadModal').removeAttribute('data-editing-id');
         }
 
         async function addLead() {
@@ -2026,7 +2052,10 @@
                 return;
             }
 
-            const newLead = {
+            // Проверяем, редактируем ли мы существующий лид
+            const editingId = document.getElementById('addLeadModal').getAttribute('data-editing-id');
+            
+            const leadData = {
                 name: clientName,
                 phone: contact,
                 email: '',
@@ -2037,56 +2066,105 @@
             };
 
             try {
-                if (isOnline) {
-                    const response = await fetch(`${API_BASE_URL}/leads`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(newLead)
-                    });
+                if (editingId) {
+                    // Режим редактирования
+                    if (isOnline) {
+                        const response = await fetch(`${API_BASE_URL}/leads/${editingId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(leadData)
+                        });
 
-                    if (response.ok) {
-                        const savedLead = await response.json();
-                        // Преобразуем формат для совместимости
-                        savedLead.clientName = savedLead.client_name;
-                        savedLead.contact = savedLead.phone;
-                        savedLead.createdAt = savedLead.created_at;
-                        savedLead.updatedAt = savedLead.updated_at;
-                        savedLead.calculationId = createCalculation ? nextItemId++ : null;
-                        savedLead.totalAmount = 0;
-                        
-                        leads.push(savedLead);
-                        showNotification('Лид добавлен', 'success');
+                        if (response.ok) {
+                            const updatedLead = await response.json();
+                            // Преобразуем формат для совместимости
+                            updatedLead.clientName = updatedLead.client_name;
+                            updatedLead.contact = updatedLead.phone;
+                            updatedLead.createdAt = updatedLead.created_at;
+                            updatedLead.updatedAt = updatedLead.updated_at;
+                            
+                            // Обновляем лид в массиве
+                            const index = leads.findIndex(l => l.id == editingId);
+                            if (index !== -1) {
+                                leads[index] = { ...leads[index], ...updatedLead };
+                            }
+                            showNotification('Лид обновлен', 'success');
+                        } else {
+                            throw new Error('Ошибка обновления лида');
+                        }
                     } else {
-                        throw new Error('Ошибка сохранения лида');
+                        // Офлайн режим
+                        const index = leads.findIndex(l => l.id == editingId);
+                        if (index !== -1) {
+                            leads[index] = {
+                                ...leads[index],
+                                clientName: clientName,
+                                contact: contact,
+                                status: status,
+                                source: source,
+                                comments: comments,
+                                updatedAt: new Date().toISOString()
+                            };
+                        }
+                        localStorage.setItem('ff-leads', JSON.stringify(leads));
+                        showNotification('Лид обновлен (офлайн)', 'success');
                     }
-                } else {
-                    // Офлайн режим
-                    newLead.id = nextLeadId++;
-                    newLead.clientName = newLead.client_name;
-                    newLead.contact = newLead.phone;
-                    newLead.createdAt = new Date().toISOString();
-                    newLead.updatedAt = new Date().toISOString();
-                    newLead.calculationId = createCalculation ? nextItemId++ : null;
-                    newLead.totalAmount = 0;
                     
-                    leads.push(newLead);
-                    localStorage.setItem('ff-leads', JSON.stringify(leads));
-                    showNotification('Лид добавлен (офлайн)', 'success');
+                    // Очищаем атрибут редактирования
+                    document.getElementById('addLeadModal').removeAttribute('data-editing-id');
+                } else {
+                    // Режим добавления нового лида
+                    if (isOnline) {
+                        const response = await fetch(`${API_BASE_URL}/leads`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(leadData)
+                        });
+
+                        if (response.ok) {
+                            const savedLead = await response.json();
+                            // Преобразуем формат для совместимости
+                            savedLead.clientName = savedLead.client_name;
+                            savedLead.contact = savedLead.phone;
+                            savedLead.createdAt = savedLead.created_at;
+                            savedLead.updatedAt = savedLead.updated_at;
+                            savedLead.calculationId = createCalculation ? nextItemId++ : null;
+                            savedLead.totalAmount = 0;
+                            
+                            leads.push(savedLead);
+                            showNotification('Лид добавлен', 'success');
+                        } else {
+                            throw new Error('Ошибка сохранения лида');
+                        }
+                    } else {
+                        // Офлайн режим
+                        leadData.id = nextLeadId++;
+                        leadData.clientName = clientName;
+                        leadData.contact = contact;
+                        leadData.createdAt = new Date().toISOString();
+                        leadData.updatedAt = new Date().toISOString();
+                        leadData.calculationId = createCalculation ? nextItemId++ : null;
+                        leadData.totalAmount = 0;
+                        
+                        leads.push(leadData);
+                        localStorage.setItem('ff-leads', JSON.stringify(leads));
+                        showNotification('Лид добавлен (офлайн)', 'success');
+                    }
                 }
 
                 saveData();
                 hideAddLeadModal();
                 
                 // Update current view
-                if (currentTab === 'leads') {
-                    updateLeadsTable();
-                } else if (currentTab === 'dashboard') {
+                updateLeadsTable();
+                updateKanbanBoard();
+                if (currentTab === 'dashboard') {
                     updateDashboard();
                 }
 
             } catch (error) {
-                console.error('Ошибка добавления лида:', error);
-                showNotification('Ошибка добавления лида', 'error');
+                console.error('Ошибка сохранения лида:', error);
+                showNotification('Ошибка сохранения лида', 'error');
             }
         }
 
@@ -2490,15 +2568,31 @@
             document.getElementById('addLeadModal').setAttribute('data-editing-id', leadId);
         }
 
-        function deleteLead(leadId) {
+        async function deleteLead(leadId) {
             if (confirm('Вы уверены, что хотите удалить этот лид?')) {
-                leads = leads.filter(l => l.id !== leadId);
-                saveData();
-                updateLeadsTable();
-                if (currentTab === 'dashboard') {
-                    updateDashboard();
+                try {
+                    if (isOnline) {
+                        const response = await fetch(`${API_BASE_URL}/leads/${leadId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Ошибка удаления лида');
+                        }
+                    }
+                    
+                    leads = leads.filter(l => l.id !== leadId);
+                    localStorage.setItem('ff-leads', JSON.stringify(leads));
+                    updateLeadsTable();
+                    updateKanbanBoard();
+                    if (currentTab === 'dashboard') {
+                        updateDashboard();
+                    }
+                    showNotification('Лид удален', 'success');
+                } catch (error) {
+                    console.error('Ошибка удаления лида:', error);
+                    showNotification('Ошибка удаления лида', 'error');
                 }
-                showNotification('Лид удален', 'success');
             }
         }
 
@@ -2594,6 +2688,8 @@
 
         // Kanban Board Functions
         function updateKanbanBoard() {
+            console.log('Updating Kanban board with leads:', leads);
+            
             // Update counts for each stage
             pipelineStages.forEach(stage => {
                 const count = leads.filter(lead => lead.status === stage.id).length;
@@ -2608,7 +2704,11 @@
                 const columnElement = document.getElementById(`${stage.id}-leads-column`);
                 if (columnElement) {
                     const stageLeads = leads.filter(lead => lead.status === stage.id);
-                    columnElement.innerHTML = stageLeads.map(lead => createLeadCard(lead)).join('');
+                    if (stageLeads.length === 0) {
+                        columnElement.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Нет лидов</p>';
+                    } else {
+                        columnElement.innerHTML = stageLeads.map(lead => createLeadCard(lead)).join('');
+                    }
                 }
             });
 
@@ -2617,20 +2717,22 @@
         }
 
         function createLeadCard(lead) {
-            const leadData = leads.find(l => l.id === lead.id);
             const hasReminders = reminders.some(r => r.leadId === lead.id && !r.completed);
             const reminderCount = reminders.filter(r => r.leadId === lead.id && !r.completed).length;
+            const clientName = lead.clientName || lead.name || 'Без имени';
+            const contact = lead.contact || lead.phone || '';
+            const totalAmount = lead.totalAmount || 0;
 
             return `
                 <div class="kanban-card" draggable="true" ondragstart="dragStart(event, ${lead.id})" onclick="openLeadDetails(${lead.id})">
                     <div class="flex items-start justify-between mb-2">
-                        <div class="font-medium text-sm text-gray-900 dark:text-white truncate">${lead.clientName}</div>
+                        <div class="font-medium text-sm text-gray-900 dark:text-white truncate">${clientName}</div>
                         ${hasReminders ? `<span class="text-xs bg-red-100 text-red-800 px-1 rounded">${reminderCount}</span>` : ''}
                     </div>
-                    ${lead.contact ? `<div class="text-xs text-gray-500 dark:text-gray-400 mb-1">${lead.contact}</div>` : ''}
+                    ${contact ? `<div class="text-xs text-gray-500 dark:text-gray-400 mb-1">${contact}</div>` : ''}
                     <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">${getSourceText(lead.source)}</div>
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-medium text-gray-900 dark:text-white">${lead.totalAmount.toLocaleString('ru-RU')} ₽</span>
+                        <span class="text-xs font-medium text-gray-900 dark:text-white">${totalAmount.toLocaleString('ru-RU')} ₽</span>
                         <div class="flex space-x-1">
                             <button onclick="event.stopPropagation(); addReminderForLead(${lead.id})" class="text-gray-400 hover:text-yellow-500" title="Добавить напоминание">
                                 <i data-lucide="bell-plus" class="h-3 w-3"></i>
@@ -2653,18 +2755,49 @@
             event.preventDefault();
         }
 
-        function drop(event, newStatus) {
+        async function drop(event, newStatus) {
             event.preventDefault();
             const leadId = parseInt(event.dataTransfer.getData('text/plain'));
             const lead = leads.find(l => l.id === leadId);
             
             if (lead && lead.status !== newStatus) {
+                const oldStatus = lead.status;
                 lead.status = newStatus;
                 lead.updatedAt = new Date().toISOString();
-                saveData();
-                updateKanbanBoard();
-                updateDashboard();
-                showNotification(`Лид "${lead.clientName}" перемещен в "${getStatusText(newStatus)}"`, 'success');
+                
+                try {
+                    if (isOnline) {
+                        // Отправляем обновление на сервер
+                        const response = await fetch(`${API_BASE_URL}/leads/${leadId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: lead.clientName || lead.name,
+                                phone: lead.contact || lead.phone,
+                                email: lead.email || '',
+                                status: newStatus,
+                                source: lead.source,
+                                notes: lead.comments || lead.notes,
+                                user_id: lead.user_id || (currentUser ? currentUser.id : null)
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Ошибка обновления статуса');
+                        }
+                    }
+                    
+                    localStorage.setItem('ff-leads', JSON.stringify(leads));
+                    updateKanbanBoard();
+                    updateDashboard();
+                    showNotification(`Лид "${lead.clientName || lead.name}" перемещен в "${getStatusText(newStatus)}"`, 'success');
+                } catch (error) {
+                    console.error('Ошибка обновления статуса лида:', error);
+                    // Откатываем изменения
+                    lead.status = oldStatus;
+                    updateKanbanBoard();
+                    showNotification('Ошибка обновления статуса лида', 'error');
+                }
             }
             
             // Remove dragging class
@@ -2697,12 +2830,12 @@
             document.getElementById('telegramChatId').value = '';
         }
 
-        function addReminder() {
+        async function addReminder() {
             const leadId = parseInt(document.getElementById('reminderLeadId').value);
             const dateTime = document.getElementById('reminderDateTime').value;
             const text = document.getElementById('reminderText').value.trim();
-            const botToken = document.getElementById('telegramBotToken').value.trim();
-            const chatId = document.getElementById('telegramChatId').value.trim();
+            const botToken = document.getElementById('telegramBotToken').value.trim() || globalTelegramSettings.botToken;
+            const chatId = document.getElementById('telegramChatId').value.trim() || globalTelegramSettings.chatId;
 
             if (!leadId || !dateTime || !text) {
                 alert('Заполните все обязательные поля');
@@ -2710,24 +2843,61 @@
             }
 
             const reminder = {
-                id: nextReminderId++,
-                leadId: leadId,
-                dateTime: dateTime,
-                text: text,
-                botToken: botToken,
-                chatId: chatId,
-                completed: false,
-                createdAt: new Date().toISOString()
+                lead_id: leadId,
+                reminder_time: dateTime,
+                message: text,
+                telegram_bot_token: botToken,
+                telegram_chat_id: chatId,
+                user_id: currentUser ? currentUser.id : null
             };
 
-            reminders.push(reminder);
-            saveData();
-            hideAddReminderModal();
-            updateKanbanBoard();
-            showNotification('Напоминание добавлено', 'success');
+            try {
+                if (isOnline) {
+                    const response = await fetch(`${API_BASE_URL}/reminders`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(reminder)
+                    });
 
-            // Schedule notification
-            scheduleReminderNotification(reminder);
+                    if (response.ok) {
+                        const savedReminder = await response.json();
+                        // Преобразуем формат для совместимости
+                        savedReminder.leadId = savedReminder.lead_id;
+                        savedReminder.dateTime = savedReminder.reminder_time;
+                        savedReminder.text = savedReminder.message;
+                        savedReminder.botToken = savedReminder.telegram_bot_token;
+                        savedReminder.chatId = savedReminder.telegram_chat_id;
+                        savedReminder.completed = savedReminder.is_completed;
+                        
+                        reminders.push(savedReminder);
+                        showNotification('Напоминание добавлено', 'success');
+                    } else {
+                        throw new Error('Ошибка сохранения напоминания');
+                    }
+                } else {
+                    // Офлайн режим
+                    reminder.id = nextReminderId++;
+                    reminder.leadId = leadId;
+                    reminder.dateTime = dateTime;
+                    reminder.text = text;
+                    reminder.completed = false;
+                    reminder.createdAt = new Date().toISOString();
+                    
+                    reminders.push(reminder);
+                    localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+                    showNotification('Напоминание добавлено (офлайн)', 'success');
+                }
+
+                hideAddReminderModal();
+                updateKanbanBoard();
+                updateGlobalRemindersList();
+
+                // Schedule notification
+                scheduleReminderNotification(reminder);
+            } catch (error) {
+                console.error('Ошибка добавления напоминания:', error);
+                showNotification('Ошибка добавления напоминания', 'error');
+            }
         }
 
         function addReminderForLead(leadId) {
@@ -2792,24 +2962,66 @@
             lucide.createIcons();
         }
 
-        function completeReminder(reminderId) {
+        async function completeReminder(reminderId) {
             const reminder = reminders.find(r => r.id === reminderId);
             if (reminder) {
-                reminder.completed = true;
-                saveData();
-                updateRemindersList();
-                updateKanbanBoard();
-                showNotification('Напоминание отмечено выполненным', 'success');
+                try {
+                    if (isOnline) {
+                        const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                lead_id: reminder.leadId || reminder.lead_id,
+                                reminder_time: reminder.dateTime || reminder.reminder_time,
+                                message: reminder.text || reminder.message,
+                                is_completed: true,
+                                telegram_bot_token: reminder.botToken || reminder.telegram_bot_token,
+                                telegram_chat_id: reminder.chatId || reminder.telegram_chat_id,
+                                user_id: reminder.user_id || (currentUser ? currentUser.id : null)
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Ошибка обновления напоминания');
+                        }
+                    }
+                    
+                    reminder.completed = true;
+                    localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+                    updateRemindersList();
+                    updateKanbanBoard();
+                    updateGlobalRemindersList();
+                    showNotification('Напоминание отмечено выполненным', 'success');
+                } catch (error) {
+                    console.error('Ошибка обновления напоминания:', error);
+                    showNotification('Ошибка обновления напоминания', 'error');
+                }
             }
         }
 
-        function deleteReminder(reminderId) {
+        async function deleteReminder(reminderId) {
             if (confirm('Удалить это напоминание?')) {
-                reminders = reminders.filter(r => r.id !== reminderId);
-                saveData();
-                updateRemindersList();
-                updateKanbanBoard();
-                showNotification('Напоминание удалено', 'success');
+                try {
+                    if (isOnline) {
+                        const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Ошибка удаления напоминания');
+                        }
+                    }
+                    
+                    reminders = reminders.filter(r => r.id !== reminderId);
+                    localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+                    updateRemindersList();
+                    updateKanbanBoard();
+                    updateGlobalRemindersList();
+                    showNotification('Напоминание удалено', 'success');
+                } catch (error) {
+                    console.error('Ошибка удаления напоминания:', error);
+                    showNotification('Ошибка удаления напоминания', 'error');
+                }
             }
         }
 
@@ -3052,16 +3264,36 @@
             document.getElementById('notificationSettingsModal').classList.add('hidden');
         }
 
-        function saveNotificationSettings() {
+        async function saveNotificationSettings() {
             globalTelegramSettings.botToken = document.getElementById('globalTelegramBotToken').value.trim();
             globalTelegramSettings.chatType = document.getElementById('telegramChatType').value;
             globalTelegramSettings.chatId = document.getElementById('globalTelegramChatId').value.trim();
             globalTelegramSettings.groupId = document.getElementById('globalTelegramGroupId').value.trim();
             globalTelegramSettings.userId = document.getElementById('globalTelegramUserId').value.trim();
             
-            saveData();
-            hideNotificationSettings();
-            showNotification('Настройки уведомлений сохранены', 'success');
+            try {
+                if (isOnline) {
+                    const response = await fetch(`${API_BASE_URL}/settings`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            setting_key: 'telegram_settings',
+                            setting_value: JSON.stringify(globalTelegramSettings)
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Ошибка сохранения настроек');
+                    }
+                }
+                
+                localStorage.setItem('ff-global-telegram-settings', JSON.stringify(globalTelegramSettings));
+                hideNotificationSettings();
+                showNotification('Настройки уведомлений сохранены', 'success');
+            } catch (error) {
+                console.error('Ошибка сохранения настроек:', error);
+                showNotification('Ошибка сохранения настроек', 'error');
+            }
         }
 
         function testTelegramConnection() {
