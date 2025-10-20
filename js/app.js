@@ -1,0 +1,454 @@
+// ========================================
+// FF Dashboard - Main Application
+// ========================================
+
+// Global variables
+let priceDatabase = [];
+let calculationItems = [];
+let nextItemId = 1;
+let leads = [];
+let nextLeadId = 1;
+let currentTab = 'dashboard';
+let reminders = [];
+let nextReminderId = 1;
+let currentUser = null;
+let users = [];
+let globalTelegramSettings = {
+    botToken: '',
+    chatType: 'personal', // 'personal' or 'group'
+    chatId: '', // for personal messages
+    groupId: '', // for group messages
+    userId: '' // user ID for tagging in groups
+};
+
+// API Configuration
+const API_BASE_URL = 'https://api.fulfilment-one.ru/api';
+let isOnline = navigator.onLine;
+
+// Проверка подключения
+window.addEventListener('online', () => {
+    isOnline = true;
+    console.log('🌐 Подключение восстановлено');
+    updateConnectionStatus();
+});
+
+window.addEventListener('offline', () => {
+    isOnline = false;
+    console.log('📱 Работаем офлайн');
+    updateConnectionStatus();
+});
+
+// Настройки системы
+let leadStatuses = [
+    { id: 'new', name: 'Новый', color: 'blue' },
+    { id: 'contacted', name: 'Связались', color: 'yellow' },
+    { id: 'quoted', name: 'Отправили смету', color: 'purple' },
+    { id: 'negotiating', name: 'Переговоры', color: 'orange' },
+    { id: 'won', name: 'Закрыт успешно', color: 'green' },
+    { id: 'lost', name: 'Закрыт неуспешно', color: 'red' }
+];
+
+let leadSources = [
+    { id: 'website', name: 'Сайт' },
+    { id: 'instagram', name: 'Instagram' },
+    { id: 'facebook', name: 'Facebook' },
+    { id: 'google', name: 'Google' },
+    { id: 'yandex', name: 'Яндекс' },
+    { id: 'referral', name: 'Рекомендация' },
+    { id: 'phone', name: 'Телефонный звонок' },
+    { id: 'other', name: 'Другое' }
+];
+
+// Услуги фулфилмента
+let services = [];
+let importServicesData = null; // Данные для импорта услуг
+
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
+
+function updateConnectionStatus() {
+    const statusElement = document.getElementById('connectionStatus');
+    if (statusElement) {
+        if (isOnline) {
+            statusElement.innerHTML = '<i data-lucide="wifi" class="h-4 w-4 text-green-500"></i> Онлайн';
+            statusElement.className = 'flex items-center text-green-600 dark:text-green-400 text-sm';
+        } else {
+            statusElement.innerHTML = '<i data-lucide="wifi-off" class="h-4 w-4 text-red-500"></i> Офлайн';
+            statusElement.className = 'flex items-center text-red-600 dark:text-red-400 text-sm';
+        }
+        lucide.createIcons();
+    }
+}
+
+function showNotification(message, type = 'info') {
+    // Создаем элемент уведомления
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
+    
+    // Определяем стили в зависимости от типа
+    switch (type) {
+        case 'success':
+            notification.className += ' bg-green-500 text-white';
+            break;
+        case 'error':
+            notification.className += ' bg-red-500 text-white';
+            break;
+        case 'warning':
+            notification.className += ' bg-yellow-500 text-white';
+            break;
+        default:
+            notification.className += ' bg-blue-500 text-white';
+    }
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Анимация появления
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Автоматическое скрытие через 3 секунды
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'Не указана';
+    
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (error) {
+        return 'Неверная дата';
+    }
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB',
+        minimumFractionDigits: 0
+    }).format(amount);
+}
+
+// ========================================
+// TAB NAVIGATION
+// ========================================
+
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+        button.classList.remove('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
+        button.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName + '-content').classList.remove('hidden');
+    
+    // Add active class to selected tab button
+    const activeButton = document.getElementById('tab-' + tabName);
+    activeButton.classList.add('active', 'border-blue-500', 'text-blue-600', 'dark:text-blue-400');
+    activeButton.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+    
+    currentTab = tabName;
+    
+    // Сохраняем активную вкладку в localStorage
+    localStorage.setItem('ff-active-tab', tabName);
+    
+    // Update content based on tab
+    if (tabName === 'dashboard') {
+        updateDashboard();
+    } else if (tabName === 'leads') {
+        updateLeadsTable();
+    } else if (tabName === 'kanban') {
+        updateKanbanBoard();
+    }
+}
+
+// ========================================
+// DATA LOADING AND SAVING
+// ========================================
+
+async function loadData() {
+    try {
+        if (isOnline) {
+            // Загружаем данные из API
+            const [leadsResponse, remindersResponse, pricesResponse, usersResponse, settingsResponse] = await Promise.all([
+                fetch(`${API_BASE_URL}/leads`),
+                fetch(`${API_BASE_URL}/reminders`),
+                fetch(`${API_BASE_URL}/prices`),
+                fetch(`${API_BASE_URL}/users`),
+                fetch(`${API_BASE_URL}/settings`)
+            ]);
+
+            if (leadsResponse.ok) {
+                leads = await leadsResponse.json();
+                // Нормализуем поля лидов для совместимости
+                leads = leads.map(lead => ({
+                    ...lead,
+                    clientName: lead.client_name || lead.clientName || lead.name,
+                    contact: lead.phone || lead.contact,
+                    comments: lead.notes || lead.comments
+                }));
+                localStorage.setItem('ff-leads', JSON.stringify(leads));
+            }
+            if (remindersResponse.ok) {
+                reminders = await remindersResponse.json();
+                localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+            }
+            if (pricesResponse.ok) {
+                priceDatabase = await pricesResponse.json();
+                localStorage.setItem('ff-price-database', JSON.stringify(priceDatabase));
+                updatePriceDatabaseTable();
+            }
+            if (usersResponse.ok) {
+                users = await usersResponse.json();
+                localStorage.setItem('ff-users', JSON.stringify(users));
+            }
+            if (settingsResponse.ok) {
+                const settings = await settingsResponse.json();
+                if (settings && settings.length > 0) {
+                    // Загружаем настройки Telegram
+                    const telegramSettings = settings.find(s => s.key === 'telegram_settings');
+                    if (telegramSettings) {
+                        globalTelegramSettings = JSON.parse(telegramSettings.value);
+                        localStorage.setItem('ff-global-telegram-settings', JSON.stringify(globalTelegramSettings));
+                    }
+                    
+                    // Загружаем статусы лидов
+                    const leadStatusesSetting = settings.find(s => s.key === 'lead_statuses');
+                    if (leadStatusesSetting) {
+                        leadStatuses = JSON.parse(leadStatusesSetting.value);
+                        localStorage.setItem('ff-lead-statuses', JSON.stringify(leadStatuses));
+                    }
+                    
+                    // Загружаем источники лидов
+                    const leadSourcesSetting = settings.find(s => s.key === 'lead_sources');
+                    if (leadSourcesSetting) {
+                        leadSources = JSON.parse(leadSourcesSetting.value);
+                        localStorage.setItem('ff-lead-sources', JSON.stringify(leadSources));
+                    }
+                    
+                    // Загружаем этапы воронки
+                    const pipelineStagesSetting = settings.find(s => s.key === 'pipeline_stages');
+                    if (pipelineStagesSetting) {
+                        pipelineStages = JSON.parse(pipelineStagesSetting.value);
+                        localStorage.setItem('ff-pipeline-stages', JSON.stringify(pipelineStages));
+                    }
+                    
+                    // Загружаем услуги фулфилмента
+                    const servicesSetting = settings.find(s => s.key === 'services');
+                    if (servicesSetting) {
+                        services = JSON.parse(servicesSetting.value);
+                        localStorage.setItem('ff-services', JSON.stringify(services));
+                    }
+                }
+            }
+
+            console.log('✅ Данные загружены из БД');
+        } else {
+            // Загружаем из localStorage
+            const savedPriceDatabase = localStorage.getItem('ff-price-database');
+            const savedLeads = localStorage.getItem('ff-leads');
+            const savedReminders = localStorage.getItem('ff-reminders');
+            const savedUsers = localStorage.getItem('ff-users');
+            const savedSettings = localStorage.getItem('ff-global-telegram-settings');
+            const savedLeadStatuses = localStorage.getItem('ff-lead-statuses');
+            const savedLeadSources = localStorage.getItem('ff-lead-sources');
+            const savedPipelineStages = localStorage.getItem('ff-pipeline-stages');
+            const savedServices = localStorage.getItem('ff-services');
+
+            if (savedPriceDatabase) {
+                priceDatabase = JSON.parse(savedPriceDatabase);
+                updatePriceDatabaseTable();
+            }
+            if (savedLeads) {
+                leads = JSON.parse(savedLeads);
+            }
+            if (savedReminders) {
+                reminders = JSON.parse(savedReminders);
+            }
+            if (savedUsers) {
+                users = JSON.parse(savedUsers);
+                // Если есть пользователи, делаем первого текущим
+                if (users.length > 0 && !currentUser) {
+                    currentUser = users[0];
+                    updateCurrentUserDisplay();
+                }
+            }
+            if (savedSettings) {
+                globalTelegramSettings = JSON.parse(savedSettings);
+            }
+            if (savedLeadStatuses) {
+                leadStatuses = JSON.parse(savedLeadStatuses);
+            }
+            if (savedLeadSources) {
+                leadSources = JSON.parse(savedLeadSources);
+            }
+            if (savedPipelineStages) {
+                pipelineStages = JSON.parse(savedPipelineStages);
+            }
+            if (savedServices) {
+                services = JSON.parse(savedServices);
+            }
+
+            console.log('📱 Данные загружены из localStorage');
+        }
+
+        // Загружаем локальные данные
+        const savedCalculationItems = localStorage.getItem('ff-calculation-items');
+        const savedClientName = localStorage.getItem('ff-client-name');
+        const savedComments = localStorage.getItem('ff-comments');
+        const savedMarkup = localStorage.getItem('ff-markup');
+
+        if (savedCalculationItems) {
+            calculationItems = JSON.parse(savedCalculationItems);
+            updateCalculationTable();
+        }
+        if (savedClientName) {
+            document.getElementById('clientName').value = savedClientName;
+        }
+        if (savedComments) {
+            document.getElementById('comments').value = savedComments;
+        }
+        if (savedMarkup) {
+            document.getElementById('markup').value = savedMarkup;
+        }
+
+        // Обновляем интерфейс
+        updateDashboard();
+        updateLeadsTable();
+        updateKanbanBoard();
+        updateRemindersList();
+        updateGlobalRemindersList();
+        updateConnectionStatus();
+
+    } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+        showNotification('Ошибка загрузки данных. Работаем в офлайн режиме', 'warning');
+        
+        // Загружаем из localStorage в случае ошибки
+        const savedLeads = localStorage.getItem('ff-leads');
+        const savedReminders = localStorage.getItem('ff-reminders');
+        const savedPriceDatabase = localStorage.getItem('ff-price-database');
+        
+        if (savedLeads) leads = JSON.parse(savedLeads);
+        if (savedReminders) reminders = JSON.parse(savedReminders);
+        if (savedPriceDatabase) {
+            priceDatabase = JSON.parse(savedPriceDatabase);
+            updatePriceDatabaseTable();
+        }
+    }
+}
+
+function saveData() {
+    // Сохраняем данные расчета
+    localStorage.setItem('ff-calculation-items', JSON.stringify(calculationItems));
+    localStorage.setItem('ff-client-name', document.getElementById('clientName').value);
+    localStorage.setItem('ff-comments', document.getElementById('comments').value);
+    localStorage.setItem('ff-markup', document.getElementById('markup').value);
+    
+    // Сохраняем основные данные
+    localStorage.setItem('ff-leads', JSON.stringify(leads));
+    localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+    localStorage.setItem('ff-price-database', JSON.stringify(priceDatabase));
+    localStorage.setItem('ff-users', JSON.stringify(users));
+    localStorage.setItem('ff-global-telegram-settings', JSON.stringify(globalTelegramSettings));
+    localStorage.setItem('ff-lead-statuses', JSON.stringify(leadStatuses));
+    localStorage.setItem('ff-lead-sources', JSON.stringify(leadSources));
+    localStorage.setItem('ff-pipeline-stages', JSON.stringify(pipelineStages));
+    localStorage.setItem('ff-services', JSON.stringify(services));
+}
+
+// ========================================
+// INITIALIZATION
+// ========================================
+
+// Initialize app
+document.addEventListener('DOMContentLoaded', function() {
+    // Проверяем авторизацию при загрузке
+    const savedUser = localStorage.getItem('ff-current-user');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        updateCurrentUserDisplay();
+        // Скрываем модальное окно входа если пользователь авторизован
+        document.getElementById('loginModal').classList.add('hidden');
+    } else {
+        // Показываем модальное окно входа
+        document.getElementById('loginModal').classList.remove('hidden');
+    }
+
+    // Загружаем данные
+    loadData();
+
+    // Восстанавливаем активную вкладку
+    const savedTab = localStorage.getItem('ff-active-tab');
+    if (savedTab) {
+        showTab(savedTab);
+    }
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+
+    // Инициализируем иконки Lucide
+    lucide.createIcons();
+
+    // Устанавливаем текущую дату
+    const currentDate = new Date().toLocaleDateString('ru-RU');
+    document.getElementById('currentDate').value = currentDate;
+});
+
+// ========================================
+// EXPORT FOR OTHER MODULES
+// ========================================
+
+// Экспортируем основные переменные и функции для других модулей
+window.FFApp = {
+    // Variables
+    priceDatabase,
+    calculationItems,
+    nextItemId,
+    leads,
+    nextLeadId,
+    currentTab,
+    reminders,
+    nextReminderId,
+    currentUser,
+    users,
+    globalTelegramSettings,
+    API_BASE_URL,
+    isOnline,
+    leadStatuses,
+    leadSources,
+    services,
+    importServicesData,
+    
+    // Functions
+    updateConnectionStatus,
+    showNotification,
+    formatDate,
+    formatCurrency,
+    showTab,
+    loadData,
+    saveData
+};
