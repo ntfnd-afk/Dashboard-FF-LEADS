@@ -835,16 +835,24 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                     Настройки системы
                 </h3>
-                <button onclick="hideAdminSettings()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <i data-lucide="x" class="h-6 w-6"></i>
-                </button>
+                <div class="flex items-center space-x-2">
+                    <button onclick="toggleAllAccordions()" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 rounded-lg transition-colors">
+                        <span id="toggleAllText">Развернуть все</span>
+                    </button>
+                    <button onclick="hideAdminSettings()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i data-lucide="x" class="h-6 w-6"></i>
+                    </button>
+                </div>
             </div>
             
-            <div class="p-6">
+            <div class="p-6 max-h-96 overflow-y-auto">
                 <!-- Статусы лидов -->
-                <div class="mb-8">
-                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Статусы лидов</h4>
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="mb-6">
+                    <button onclick="toggleAccordion('statusAccordion')" class="w-full flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                        <h4 class="text-md font-medium text-gray-900 dark:text-white">Статусы лидов</h4>
+                        <i id="statusAccordionIcon" data-lucide="chevron-down" class="h-5 w-5 text-gray-500 dark:text-gray-400"></i>
+                    </button>
+                    <div id="statusAccordion" class="hidden mt-2 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                         <div id="statusList" class="space-y-2">
                             <!-- Статусы будут загружены динамически -->
                         </div>
@@ -867,9 +875,12 @@
                 </div>
 
                 <!-- Источники лидов -->
-                <div class="mb-8">
-                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Источники лидов</h4>
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="mb-6">
+                    <button onclick="toggleAccordion('sourceAccordion')" class="w-full flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                        <h4 class="text-md font-medium text-gray-900 dark:text-white">Источники лидов</h4>
+                        <i id="sourceAccordionIcon" data-lucide="chevron-down" class="h-5 w-5 text-gray-500 dark:text-gray-400"></i>
+                    </button>
+                    <div id="sourceAccordion" class="hidden mt-2 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                         <div id="sourceList" class="space-y-2">
                             <!-- Источники будут загружены динамически -->
                         </div>
@@ -883,9 +894,12 @@
                 </div>
 
                 <!-- Этапы воронки -->
-                <div class="mb-8">
-                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Этапы воронки (Канбан)</h4>
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="mb-6">
+                    <button onclick="toggleAccordion('pipelineAccordion')" class="w-full flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                        <h4 class="text-md font-medium text-gray-900 dark:text-white">Этапы воронки (Канбан)</h4>
+                        <i id="pipelineAccordionIcon" data-lucide="chevron-down" class="h-5 w-5 text-gray-500 dark:text-gray-400"></i>
+                    </button>
+                    <div id="pipelineAccordion" class="hidden mt-2 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                         <div id="pipelineList" class="space-y-2">
                             <!-- Этапы будут загружены динамически -->
                         </div>
@@ -3625,6 +3639,50 @@
             document.getElementById('adminSettingsModal').classList.add('hidden');
         }
 
+        function toggleAccordion(accordionId) {
+            const accordion = document.getElementById(accordionId);
+            const icon = document.getElementById(accordionId + 'Icon');
+            
+            if (accordion.classList.contains('hidden')) {
+                accordion.classList.remove('hidden');
+                icon.setAttribute('data-lucide', 'chevron-up');
+            } else {
+                accordion.classList.add('hidden');
+                icon.setAttribute('data-lucide', 'chevron-down');
+            }
+            
+            // Обновляем иконки
+            lucide.createIcons();
+        }
+
+        function toggleAllAccordions() {
+            const accordions = ['statusAccordion', 'sourceAccordion', 'pipelineAccordion'];
+            const toggleText = document.getElementById('toggleAllText');
+            
+            // Проверяем, все ли аккордеоны открыты
+            const allOpen = accordions.every(id => !document.getElementById(id).classList.contains('hidden'));
+            
+            accordions.forEach(accordionId => {
+                const accordion = document.getElementById(accordionId);
+                const icon = document.getElementById(accordionId + 'Icon');
+                
+                if (allOpen) {
+                    // Закрываем все
+                    accordion.classList.add('hidden');
+                    icon.setAttribute('data-lucide', 'chevron-down');
+                    toggleText.textContent = 'Развернуть все';
+                } else {
+                    // Открываем все
+                    accordion.classList.remove('hidden');
+                    icon.setAttribute('data-lucide', 'chevron-up');
+                    toggleText.textContent = 'Свернуть все';
+                }
+            });
+            
+            // Обновляем иконки
+            lucide.createIcons();
+        }
+
         function loadAdminSettings() {
             // Загружаем статусы
             updateStatusList();
@@ -3632,6 +3690,9 @@
             updateSourceList();
             // Загружаем этапы воронки
             updatePipelineList();
+            
+            // Открываем первый аккордеон по умолчанию
+            toggleAccordion('statusAccordion');
         }
 
         function updateSelectOptions() {
