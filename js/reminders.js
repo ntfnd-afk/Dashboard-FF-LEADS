@@ -51,8 +51,9 @@ async function addReminder() {
                     timeout: 3000
                 });
                 apiAvailable = testResponse.status < 500; // Если не 5xx ошибка, то API доступен
+                console.log(`API статус: ${testResponse.status}, доступен: ${apiAvailable}`);
             } catch (error) {
-                console.log('API недоступен, переходим в офлайн режим');
+                console.log('API недоступен, переходим в офлайн режим:', error);
                 apiAvailable = false;
             }
         }
@@ -67,9 +68,12 @@ async function addReminder() {
             completed: false
         };
 
+        console.log('Создаем напоминание:', newReminder);
+
         // Всегда сохраняем в localStorage для надежности
         reminders.push(newReminder);
         localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+        console.log('Напоминание сохранено в localStorage, всего напоминаний:', reminders.length);
 
         // Если API доступен, также сохраняем на сервере
         if (apiAvailable) {
@@ -103,10 +107,12 @@ async function addReminder() {
         }
 
         // Обновляем UI и планируем уведомление
+        console.log('Обновляем UI...');
         hideAddReminderModal();
         updateRemindersList();
         updateGlobalRemindersList();
         scheduleReminderNotification(newReminder);
+        console.log('UI обновлен, напоминание запланировано');
     } catch (error) {
         console.error('Ошибка добавления напоминания:', error);
         showNotification('Ошибка добавления напоминания', 'error');
@@ -279,13 +285,20 @@ function updateRemindersList() {
 
 function updateGlobalRemindersList() {
     const globalRemindersList = document.getElementById('globalRemindersList');
-    if (!globalRemindersList) return;
+    if (!globalRemindersList) {
+        console.log('Элемент globalRemindersList не найден');
+        return;
+    }
 
     const activeReminders = reminders.filter(r => !r.completed);
+    console.log('Активные напоминания:', activeReminders.length);
+    
     const upcomingReminders = activeReminders
         .filter(r => new Date(r.datetime) <= new Date(Date.now() + 24 * 60 * 60 * 1000)) // Следующие 24 часа
         .sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
         .slice(0, 5);
+    
+    console.log('Предстоящие напоминания:', upcomingReminders.length);
 
     if (upcomingReminders.length === 0) {
         globalRemindersList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-sm text-center py-4">Нет предстоящих напоминаний</p>';
@@ -355,7 +368,13 @@ function showBrowserNotification(message) {
 }
 
 async function sendTelegramNotification(message) {
-    if (!globalTelegramSettings.botToken) return;
+    console.log('Отправляем Telegram уведомление:', message);
+    console.log('Настройки Telegram:', globalTelegramSettings);
+    
+    if (!globalTelegramSettings.botToken) {
+        console.log('Bot token не настроен');
+        return;
+    }
 
     try {
         const telegramMessage = `🔔 Напоминание: ${message}`;
