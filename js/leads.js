@@ -388,3 +388,20 @@ window.FFLeads = {
     getStatusColor,
     updateSelectOptions
 };
+
+// Make functions available globally for onclick attributes
+window.showAddLeadModal = showAddLeadModal;
+window.hideAddLeadModal = hideAddLeadModal;
+window.saveLead = saveLead;
+window.editLead = editLead;
+window.deleteLead = deleteLead;
+window.openLeadCalculator = openLeadCalculator;
+window.openLeadDetails = openLeadDetails;
+window.updateLeadsTable = updateLeadsTable;
+window.updateLeadsTableWithData = updateLeadsTableWithData;
+window.filterLeads = filterLeads;
+window.getStatusText = getStatusText;
+window.getSourceText = getSourceText;
+window.getStatusColor = getStatusColor;
+window.updateSelectOptions = updateSelectOptions;
+window.clearFilters = clearFilters;

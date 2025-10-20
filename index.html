@@ -62,7 +62,24 @@
         }
         
         .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         .accordion-content {
@@ -803,7 +820,7 @@
     </div>
 
     <!-- Login Modal -->
-    <div id="loginModal" class="modal-overlay">
+    <div id="loginModal" class="modal-overlay hidden">
         <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1023,63 +1040,37 @@
     </button>
 
     <!-- Load JavaScript Modules -->
-    <script src="js/app.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/leads.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/kanban.js"></script>
-    <script src="js/calculator.js"></script>
-    <script src="js/services.js"></script>
-    <script src="js/admin.js"></script>
-    <script src="js/reminders.js"></script>
+    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/leads.js"></script>
+    <script type="module" src="js/dashboard.js"></script>
+    <script type="module" src="js/kanban.js"></script>
+    <script type="module" src="js/calculator.js"></script>
+    <script type="module" src="js/services.js"></script>
+    <script type="module" src="js/admin.js"></script>
+    <script type="module" src="js/reminders.js"></script>
 
     <!-- Initialize Application -->
-    <script>
-        // Initialize app after all modules are loaded
+    <script type="module">
+        import { initializeApp } from './js/app.js';
+        
+        // Initialize app after DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            // Проверяем авторизацию при загрузке
-            const savedUser = localStorage.getItem('ff-current-user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                updateCurrentUserDisplay();
-                // Скрываем модальное окно входа если пользователь авторизован
-                document.getElementById('loginModal').classList.add('hidden');
-                
-                // Показываем кнопку админ настроек для админов
-                if (currentUser.role === 'admin') {
-                    document.getElementById('adminSettingsBtn').style.display = 'block';
-                }
-            } else {
-                // Показываем модальное окно входа
-                document.getElementById('loginModal').classList.remove('hidden');
-            }
-
-            // Загружаем данные
-            loadData();
-
-            // Восстанавливаем активную вкладку
-            const savedTab = localStorage.getItem('ff-active-tab');
-            if (savedTab) {
-                showTab(savedTab);
-            }
+            // Инициализируем приложение
+            initializeApp();
 
             // Register service worker
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('sw.js');
             }
 
-            // Инициализируем иконки Lucide
-            lucide.createIcons();
-
-            // Устанавливаем текущую дату
-            const currentDate = new Date().toLocaleDateString('ru-RU');
-            document.getElementById('currentDate').value = currentDate;
-
             // Добавляем обработчик для файлового инпута услуг
-            const fileInput = document.getElementById('servicesFileInput');
-            if (fileInput) {
-                fileInput.addEventListener('change', handleFileSelect);
-            }
+            import('./js/services.js').then(module => {
+                const fileInput = document.getElementById('servicesFileInput');
+                if (fileInput && module.handleFileSelect) {
+                    fileInput.addEventListener('change', module.handleFileSelect);
+                }
+            });
 
             // Функция для переключения полей Telegram
             window.toggleTelegramChatFields = function() {

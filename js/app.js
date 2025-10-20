@@ -382,8 +382,8 @@ function saveData() {
 // INITIALIZATION
 // ========================================
 
-// Initialize app
-document.addEventListener('DOMContentLoaded', function() {
+// App initialization functions (called from index.html)
+function initializeApp() {
     // Проверяем авторизацию при загрузке
     const savedUser = localStorage.getItem('ff-current-user');
     if (savedUser) {
@@ -391,6 +391,11 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCurrentUserDisplay();
         // Скрываем модальное окно входа если пользователь авторизован
         document.getElementById('loginModal').classList.add('hidden');
+        
+        // Показываем кнопку админ настроек для админов
+        if (currentUser.role === 'admin') {
+            document.getElementById('adminSettingsBtn').style.display = 'block';
+        }
     } else {
         // Показываем модальное окно входа
         document.getElementById('loginModal').classList.remove('hidden');
@@ -405,18 +410,13 @@ document.addEventListener('DOMContentLoaded', function() {
         showTab(savedTab);
     }
 
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
-    }
-
     // Инициализируем иконки Lucide
     lucide.createIcons();
 
     // Устанавливаем текущую дату
     const currentDate = new Date().toLocaleDateString('ru-RU');
     document.getElementById('currentDate').value = currentDate;
-});
+}
 
 // ========================================
 // EXPORT FOR OTHER MODULES
@@ -450,5 +450,15 @@ window.FFApp = {
     formatCurrency,
     showTab,
     loadData,
-    saveData
+    saveData,
+    initializeApp
 };
+
+// Make functions available globally for onclick attributes
+window.showTab = showTab;
+window.loadData = loadData;
+window.saveData = saveData;
+window.updateConnectionStatus = updateConnectionStatus;
+window.showNotification = showNotification;
+window.formatDate = formatDate;
+window.formatCurrency = formatCurrency;

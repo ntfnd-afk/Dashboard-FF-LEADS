@@ -177,3 +177,12 @@ window.FFAuth = {
     hideLoginModal,
     updateCurrentUserDisplay
 };
+
+// Make functions available globally for onclick attributes
+window.login = login;
+window.logout = logout;
+window.register = register;
+window.logoutUser = logoutUser;
+window.showLoginError = showLoginError;
+window.hideLoginModal = hideLoginModal;
+window.updateCurrentUserDisplay = updateCurrentUserDisplay;
