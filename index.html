@@ -2871,10 +2871,13 @@
             console.log('Pipeline stage IDs:', pipelineStages.map(s => s.id));
             console.log('Lead statuses:', leads.map(l => ({id: l.id, status: l.status})));
             
-            // Проверяем, виден ли канбан
+            // Проверяем, виден ли канбан - ищем элемент с классом 'hidden'
             const kanbanContent = document.getElementById('kanban-content');
-            const isKanbanVisible = kanbanContent && !kanbanContent.classList.contains('hidden');
+            const parentWithHidden = kanbanContent ? kanbanContent.closest('.hidden') : null;
+            const isKanbanVisible = !parentWithHidden;
+            
             console.log('Kanban content element:', kanbanContent);
+            console.log('Parent with hidden class:', parentWithHidden);
             console.log('Is kanban visible:', isKanbanVisible);
             console.log('Kanban content classes:', kanbanContent ? kanbanContent.className : 'not found');
             
