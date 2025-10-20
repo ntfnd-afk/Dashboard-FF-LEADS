@@ -2892,7 +2892,10 @@
                     } else {
                         const cardsHTML = stageLeads.map(lead => createLeadCard(lead)).join('');
                         console.log(`Generated HTML for stage ${stage.id}:`, cardsHTML);
-                        columnElement.innerHTML = cardsHTML;
+                        
+                        // Добавляем простую тестовую карточку
+                        const testCard = '<div style="background: red; color: white; padding: 10px; margin: 5px; border: 2px solid black;">ТЕСТОВАЯ КАРТОЧКА</div>';
+                        columnElement.innerHTML = testCard + cardsHTML;
                         console.log(`After setting innerHTML, column content:`, columnElement.innerHTML);
                         console.log(`Column element children count:`, columnElement.children.length);
                         
@@ -2910,6 +2913,21 @@
                         columnElement.style.visibility = 'visible';
                         columnElement.style.height = 'auto';
                         columnElement.style.minHeight = '200px';
+                        
+                        // Проверяем через небольшую задержку, что карточка осталась
+                        setTimeout(() => {
+                            console.log(`After 100ms, column content:`, columnElement.innerHTML);
+                            console.log(`After 100ms, children count:`, columnElement.children.length);
+                            if (columnElement.children.length > 0) {
+                                console.log(`First child element:`, columnElement.children[0]);
+                                console.log(`First child computed style:`, {
+                                    display: window.getComputedStyle(columnElement.children[0]).display,
+                                    visibility: window.getComputedStyle(columnElement.children[0]).visibility,
+                                    height: window.getComputedStyle(columnElement.children[0]).height,
+                                    opacity: window.getComputedStyle(columnElement.children[0]).opacity
+                                });
+                            }
+                        }, 100);
                     }
                 } else {
                     console.error(`Column element not found: ${stage.id}-leads-column`);
