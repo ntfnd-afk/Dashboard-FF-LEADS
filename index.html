@@ -2893,6 +2893,8 @@
                         const cardsHTML = stageLeads.map(lead => createLeadCard(lead)).join('');
                         console.log(`Generated HTML for stage ${stage.id}:`, cardsHTML);
                         columnElement.innerHTML = cardsHTML;
+                        console.log(`After setting innerHTML, column content:`, columnElement.innerHTML);
+                        console.log(`Column element children count:`, columnElement.children.length);
                     }
                 } else {
                     console.error(`Column element not found: ${stage.id}-leads-column`);
@@ -2912,7 +2914,7 @@
             const totalAmount = lead.totalAmount || 0;
 
             const cardHTML = `
-                <div class="kanban-card" draggable="true" ondragstart="dragStart(event, ${lead.id})" onclick="openLeadDetails(${lead.id})">
+                <div class="kanban-card bg-white border border-gray-200 rounded-lg p-3 shadow-sm mb-2" draggable="true" ondragstart="dragStart(event, ${lead.id})" onclick="openLeadDetails(${lead.id})">
                     <div class="flex items-start justify-between mb-2">
                         <div class="font-medium text-sm text-gray-900 dark:text-white truncate">${clientName}</div>
                         ${hasReminders ? `<span class="text-xs bg-red-100 text-red-800 px-1 rounded">${reminderCount}</span>` : ''}
