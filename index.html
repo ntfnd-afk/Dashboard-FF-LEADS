@@ -339,7 +339,7 @@
 
             <!-- Calculator Tab Content -->
             <div id="calculator-content" class="tab-content hidden">
-                <!-- Document Info -->
+            <!-- Document Info -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                     Просчёт фулфилмента
@@ -516,10 +516,10 @@
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Активные напоминания</h3>
                         <div id="reminders-list" class="space-y-3">
                             <!-- Reminders will be populated here -->
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
         </main>
     </div>
@@ -1519,7 +1519,7 @@
                     console.log('✅ Данные загружены из БД');
                 } else {
                     // Загружаем из localStorage
-                    const savedPriceDatabase = localStorage.getItem('ff-price-database');
+            const savedPriceDatabase = localStorage.getItem('ff-price-database');
                     const savedLeads = localStorage.getItem('ff-leads');
                     const savedReminders = localStorage.getItem('ff-reminders');
                     const savedUsers = localStorage.getItem('ff-users');
@@ -1528,10 +1528,10 @@
                     const savedLeadSources = localStorage.getItem('ff-lead-sources');
                     const savedPipelineStages = localStorage.getItem('ff-pipeline-stages');
 
-                    if (savedPriceDatabase) {
-                        priceDatabase = JSON.parse(savedPriceDatabase);
-                        updatePriceDatabaseTable();
-                    }
+            if (savedPriceDatabase) {
+                priceDatabase = JSON.parse(savedPriceDatabase);
+                updatePriceDatabaseTable();
+            }
                     if (savedLeads) {
                         leads = JSON.parse(savedLeads);
                     }
@@ -1568,18 +1568,18 @@
                 const savedMarkup = localStorage.getItem('ff-markup');
                 const savedComments = localStorage.getItem('ff-comments');
 
-                if (savedCalculationItems) {
-                    calculationItems = JSON.parse(savedCalculationItems);
-                    updateCalculationTable();
-                }
-                if (savedClientName) {
-                    document.getElementById('clientName').value = savedClientName;
-                }
-                if (savedMarkup) {
-                    document.getElementById('markup').value = savedMarkup;
-                }
-                if (savedComments) {
-                    document.getElementById('comments').value = savedComments;
+            if (savedCalculationItems) {
+                calculationItems = JSON.parse(savedCalculationItems);
+                updateCalculationTable();
+            }
+            if (savedClientName) {
+                document.getElementById('clientName').value = savedClientName;
+            }
+            if (savedMarkup) {
+                document.getElementById('markup').value = savedMarkup;
+            }
+            if (savedComments) {
+                document.getElementById('comments').value = savedComments;
                 }
 
             } catch (error) {
@@ -2304,7 +2304,7 @@
                     }
                 }
 
-                saveData();
+                        saveData();
                 hideAddLeadModal();
                 
                 // Update current view
@@ -2314,7 +2314,7 @@
                     updateDashboard();
                 }
 
-            } catch (error) {
+                } catch (error) {
                 console.error('Ошибка сохранения лида:', error);
                 showNotification('Ошибка сохранения лида', 'error');
             }
