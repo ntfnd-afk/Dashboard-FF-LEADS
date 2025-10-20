@@ -35,7 +35,23 @@ async function addReminder() {
     }
 
     try {
+        // Проверяем доступность API
+        let apiAvailable = false;
         if (isOnline) {
+            try {
+                // Простая проверка доступности API через HEAD запрос
+                const testResponse = await fetch(`${API_BASE_URL}/reminders`, {
+                    method: 'HEAD',
+                    timeout: 3000
+                });
+                apiAvailable = testResponse.status < 500; // Если не 5xx ошибка, то API доступен
+            } catch (error) {
+                console.log('API недоступен, переходим в офлайн режим');
+                apiAvailable = false;
+            }
+        }
+
+        if (apiAvailable) {
             const response = await fetch(`${API_BASE_URL}/reminders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -97,7 +113,23 @@ function addReminderForLead(leadId) {
 
 async function completeReminder(reminderId) {
     try {
+        // Проверяем доступность API
+        let apiAvailable = false;
         if (isOnline) {
+            try {
+                // Простая проверка доступности API через HEAD запрос
+                const testResponse = await fetch(`${API_BASE_URL}/reminders`, {
+                    method: 'HEAD',
+                    timeout: 3000
+                });
+                apiAvailable = testResponse.status < 500; // Если не 5xx ошибка, то API доступен
+            } catch (error) {
+                console.log('API недоступен, переходим в офлайн режим');
+                apiAvailable = false;
+            }
+        }
+
+        if (apiAvailable) {
             const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -141,7 +173,23 @@ async function deleteReminder(reminderId) {
     if (!confirm('Вы уверены, что хотите удалить это напоминание?')) return;
 
     try {
+        // Проверяем доступность API
+        let apiAvailable = false;
         if (isOnline) {
+            try {
+                // Простая проверка доступности API через HEAD запрос
+                const testResponse = await fetch(`${API_BASE_URL}/reminders`, {
+                    method: 'HEAD',
+                    timeout: 3000
+                });
+                apiAvailable = testResponse.status < 500; // Если не 5xx ошибка, то API доступен
+            } catch (error) {
+                console.log('API недоступен, переходим в офлайн режим');
+                apiAvailable = false;
+            }
+        }
+
+        if (apiAvailable) {
             const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
                 method: 'DELETE'
             });
