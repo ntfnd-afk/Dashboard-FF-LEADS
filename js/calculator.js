@@ -377,7 +377,9 @@ function createNewCalculationForm() {
 
 // Показать форму нового расчета
 function showNewCalculationForm() {
+    console.log('showNewCalculationForm вызвана');
     const form = document.getElementById('newCalculationForm');
+    console.log('Форма найдена:', form);
     if (form) {
         form.classList.remove('hidden');
         
@@ -397,6 +399,8 @@ function showNewCalculationForm() {
         calculateTotalInModal();
         
         lucide.createIcons();
+    } else {
+        console.error('Элемент newCalculationForm не найден');
     }
 }
 
