@@ -21,8 +21,8 @@ const TELEGRAM_CONFIG = {
     groupId: process.env.TELEGRAM_GROUP_ID || 'YOUR_GROUP_ID'
 };
 
-// Проверка напоминаний каждую минуту
-cron.schedule('* * * * *', async () => {
+// Проверка напоминаний каждые 5 минут (оптимизировано)
+cron.schedule('*/5 * * * *', async () => {
     try {
         console.log('🔍 Проверяем напоминания...');
         
@@ -170,6 +170,6 @@ app.put('/api/reminders/:id/complete', async (req, res) => {
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`🚀 Сервер уведомлений запущен на порту ${PORT}`);
-    console.log(`📅 Cron задача: проверка каждую минуту`);
+    console.log(`📅 Cron задача: проверка каждые 5 минут`);
     console.log(`🗄️ Используется существующая таблица reminders`);
 });
