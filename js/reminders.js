@@ -80,25 +80,42 @@ async function addReminder() {
             console.error('Ошибка сохранения напоминания в IndexedDB:', error);
         });
 
-        // Если API доступен, также сохраняем на сервере
+        // Если API доступен, также сохраняем на сервере уведомлений
         if (apiAvailable) {
             try {
-                const response = await fetch(`${API_BASE_URL}/reminders`, {
+                // Сначала сохраняем в основном API
+                const mainResponse = await fetch(`${API_BASE_URL}/reminders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         text: reminderText,
                         datetime: newReminder.datetime,
-                        lead_id: null, // Можно связать с лидом если нужно
+                        user_id: currentUser?.id || 1
+                    })
+                });
+
+                if (mainResponse.ok) {
+                    const serverReminder = await mainResponse.json();
+                    newReminder.id = serverReminder.id;
+                    console.log('Напоминание сохранено в основном API');
+                }
+
+                // Затем отправляем на сервер уведомлений для Telegram
+                const notificationsUrl = 'http://51.250.97.39:3001/api';
+                const notificationsResponse = await fetch(`${notificationsUrl}/reminders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: reminderText,
+                        datetime: newReminder.datetime,
+                        lead_id: null,
                         telegram_bot_token: TELEGRAM_CONFIG.botToken,
                         telegram_chat_id: TELEGRAM_CONFIG.groupId
                     })
                 });
 
-                if (response.ok) {
-                    const serverReminder = await response.json();
-                    // Обновляем ID с сервера
-                    newReminder.id = serverReminder.id;
+                if (notificationsResponse.ok) {
+                    console.log('Напоминание отправлено на сервер уведомлений');
                     // Обновляем в массиве и localStorage
                     const index = reminders.findIndex(r => r.id === Date.now());
                     if (index !== -1) {

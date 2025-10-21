@@ -90,6 +90,11 @@ async function loginUser() {
             
             // Загружаем данные после входа
             loadData();
+            
+            // Показываем кнопку админ настроек для админов
+            if (currentUser.role === 'admin') {
+                document.getElementById('adminSettingsBtn').style.display = 'block';
+            }
         } else {
             const error = await response.json();
             showLoginError(error.message || 'Неверный логин или пароль');

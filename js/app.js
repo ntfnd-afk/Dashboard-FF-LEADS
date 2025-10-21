@@ -28,9 +28,8 @@ var globalTelegramSettings = {
 };
 
 // API Configuration
-var API_BASE_URL = 'http://51.250.97.39:3001/api'; // Server notifications API
-// var API_BASE_URL = 'http://localhost:3000/api'; // Локальная разработка
-var isOnline = navigator.onLine;
+var API_BASE_URL = 'https://api.fulfilment-one.ru/api'; // Основной API сервер
+var isOnline = navigator.onLine; // Реальный статус подключения
 
 // Проверка подключения
 window.addEventListener('online', () => {
@@ -441,21 +440,21 @@ function saveData() {
 
 // App initialization functions (called from index.html)
 function initializeApp() {
-    // Проверяем авторизацию при загрузке
+    // Проверяем авторизацию
     const savedUser = localStorage.getItem('ff-current-user');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         updateCurrentUserDisplay();
-        // Скрываем модальное окно входа если пользователь авторизован
         document.getElementById('loginModal').classList.add('hidden');
         
-        // Показываем кнопку админ настроек для админов
         if (currentUser.role === 'admin') {
             document.getElementById('adminSettingsBtn').style.display = 'block';
         }
+        console.log('👤 Пользователь авторизован:', currentUser.username);
     } else {
         // Показываем модальное окно входа
         document.getElementById('loginModal').classList.remove('hidden');
+        console.log('❌ Пользователь не авторизован');
     }
 
     // Загружаем данные
