@@ -336,6 +336,10 @@ function updateGlobalRemindersList() {
         `;
     }).join('');
 
+    console.log('HTML контент для отображения:', htmlContent);
+    globalRemindersList.innerHTML = htmlContent;
+    console.log('HTML вставлен в элемент globalRemindersList');
+
     lucide.createIcons();
     
     // Отладка после обновления
