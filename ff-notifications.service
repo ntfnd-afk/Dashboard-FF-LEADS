@@ -1,0 +1,27 @@
+[Unit]
+Description=FF Dashboard Notifications Server
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/ff-dashboard
+ExecStart=/usr/bin/node server-notifications.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+EnvironmentFile=/home/ubuntu/ff-dashboard/.env
+
+# Логирование
+StandardOutput=append:/home/ubuntu/ff-dashboard/notifications.log
+StandardError=append:/home/ubuntu/ff-dashboard/notifications-error.log
+
+# Безопасность
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/ubuntu/ff-dashboard
+
+[Install]
+WantedBy=multi-user.target
