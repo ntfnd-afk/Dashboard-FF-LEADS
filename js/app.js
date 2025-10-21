@@ -256,6 +256,10 @@ function loadFromLocalStorage() {
 
 async function loadData() {
     try {
+        // Сначала всегда загружаем из localStorage как fallback
+        console.log('🔄 Начинаем загрузку данных...');
+        loadFromLocalStorage();
+        
         if (isOnline) {
             try {
                 // Загружаем данные из API
@@ -267,6 +271,8 @@ async function loadData() {
                     fetch(`${API_BASE_URL}/settings`)
                 ]);
 
+                let apiDataLoaded = false;
+
                 if (leadsResponse.ok) {
                     leads = await leadsResponse.json();
                     // Нормализуем поля лидов для совместимости
@@ -277,19 +283,23 @@ async function loadData() {
                         comments: lead.notes || lead.comments
                     }));
                     localStorage.setItem('ff-leads', JSON.stringify(leads));
+                    apiDataLoaded = true;
                 }
                 if (remindersResponse.ok) {
                     reminders = await remindersResponse.json();
                     localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+                    apiDataLoaded = true;
                 }
                 if (pricesResponse.ok) {
                     priceDatabase = await pricesResponse.json();
                     localStorage.setItem('ff-price-database', JSON.stringify(priceDatabase));
                     updatePriceDatabaseTable();
+                    apiDataLoaded = true;
                 }
                 if (usersResponse.ok) {
                     users = await usersResponse.json();
                     localStorage.setItem('ff-users', JSON.stringify(users));
+                    apiDataLoaded = true;
                 }
                 if (settingsResponse.ok) {
                     const settings = await settingsResponse.json();
@@ -328,10 +338,16 @@ async function loadData() {
                             services = JSON.parse(servicesSetting.value);
                             localStorage.setItem('ff-services', JSON.stringify(services));
                         }
+                        apiDataLoaded = true;
                     }
                 }
 
-                console.log('✅ Данные загружены из БД');
+                if (apiDataLoaded) {
+                    console.log('✅ Данные загружены из БД');
+                } else {
+                    console.log('⚠️ API недоступен, загружаем из localStorage');
+                    loadFromLocalStorage();
+                }
             } catch (apiError) {
                 console.log('⚠️ API недоступен, загружаем из localStorage:', apiError);
                 // Если API недоступен, загружаем из localStorage
