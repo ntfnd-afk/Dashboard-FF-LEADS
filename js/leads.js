@@ -306,11 +306,8 @@ function openLeadDetails(leadId) {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
 
-    // Показываем детали лида в модальном окне или переходим на вкладку лидов
-    showTab('leads');
-    
-    // Можно добавить модальное окно с детальной информацией о лиде
-    showNotification(`Открыт лид: ${lead.clientName || lead.name}`, 'info');
+    // Открываем модальное окно с деталями лида
+    viewLeadDetails(leadId);
 }
 
 // ========================================
@@ -380,6 +377,65 @@ function populateLeadDetails(lead) {
     
     // Комментарии
     document.getElementById('leadDetailsComments').textContent = lead.comments || lead.notes || 'Комментарии отсутствуют';
+    
+    // Расчеты
+    populateLeadCalculations(lead);
+}
+
+function populateLeadCalculations(lead) {
+    const calculationsContainer = document.getElementById('leadDetailsCalculations');
+    if (!calculationsContainer) return;
+    
+    // Проверяем, есть ли у лида расчеты
+    if (lead.calculation && lead.calculation.items && lead.calculation.items.length > 0) {
+        // Есть расчеты - показываем их
+        const totalAmount = lead.calculation.total || 0;
+        calculationsContainer.innerHTML = `
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h5 class="text-md font-semibold text-gray-900 dark:text-white">Текущий расчет</h5>
+                    <span class="text-lg font-bold text-green-600 dark:text-green-400">${formatCurrency(totalAmount)}</span>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+                    <div class="space-y-2">
+                        ${lead.calculation.items.map(item => `
+                            <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
+                                <span class="text-gray-900 dark:text-white">${item.name}</span>
+                                <span class="font-semibold text-gray-900 dark:text-white">${formatCurrency(item.total)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="openLeadCalculatorFromDetails()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center">
+                        <i data-lucide="edit" class="h-4 w-4 mr-2"></i>
+                        Редактировать расчет
+                    </button>
+                    <button onclick="openLeadCalculatorFromDetails()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center">
+                        <i data-lucide="plus" class="h-4 w-4 mr-2"></i>
+                        Новый расчет
+                    </button>
+                </div>
+            </div>
+        `;
+    } else {
+        // Нет расчетов - показываем кнопку добавления
+        calculationsContainer.innerHTML = `
+            <div class="text-center text-gray-500 dark:text-gray-400">
+                <i data-lucide="calculator" class="h-12 w-12 mx-auto mb-3 text-gray-400"></i>
+                <p class="mb-4">Расчетов не найдено</p>
+                <button onclick="openLeadCalculatorFromDetails()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center mx-auto">
+                    <i data-lucide="plus" class="h-4 w-4 mr-2"></i>
+                    Добавить расчет
+                </button>
+            </div>
+        `;
+    }
+    
+    // Обновляем иконки Lucide
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 }
 
 function updateLeadDetailsUI() {
@@ -404,8 +460,14 @@ function editLeadFromDetails() {
 
 function openLeadCalculatorFromDetails() {
     if (currentLeadDetails) {
-        hideLeadDetails();
-        openLeadCalculator(currentLeadDetails.id);
+        // Открываем калькулятор в модальном окне
+        if (typeof window.showCalculatorModal === 'function') {
+            window.showCalculatorModal(currentLeadDetails.id);
+        } else {
+            // Fallback - переключаемся на вкладку калькулятора
+            hideLeadDetails();
+            openLeadCalculator(currentLeadDetails.id);
+        }
     }
 }
 
@@ -598,6 +660,35 @@ function getSourceText(sourceId) {
     return source ? source.name : sourceId;
 }
 
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(amount);
+}
+
+function getSourceColor(sourceId) {
+    const colorMap = {
+        website: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+        instagram: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+        facebook: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+        google: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        yandex: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+        referral: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+        phone: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+        other: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+    };
+    return colorMap[sourceId] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'Не указано';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU');
+}
+
 function getStatusColor(statusId) {
     const status = leadStatuses.find(s => s.id === statusId);
     if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
@@ -687,6 +778,7 @@ window.FFLeads = {
     showLeadDetailsModal,
     hideLeadDetails,
     populateLeadDetails,
+    populateLeadCalculations,
     updateLeadDetailsUI,
     editLeadFromDetails,
     openLeadCalculatorFromDetails,
@@ -717,6 +809,9 @@ window.clearFilters = clearFilters;
 window.viewLeadDetails = viewLeadDetails;
 window.showLeadDetailsModal = showLeadDetailsModal;
 window.hideLeadDetails = hideLeadDetails;
+window.populateLeadDetails = populateLeadDetails;
+window.populateLeadCalculations = populateLeadCalculations;
+window.updateLeadDetailsUI = updateLeadDetailsUI;
 window.editLeadFromDetails = editLeadFromDetails;
 window.openLeadCalculatorFromDetails = openLeadCalculatorFromDetails;
 window.createReminderFromDetails = createReminderFromDetails;

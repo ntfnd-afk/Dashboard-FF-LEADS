@@ -90,11 +90,46 @@ function openCalculatorForLead(leadId) {
     showCalculatorModal();
 }
 
-function showCalculatorModal() {
+function showCalculatorModal(leadId = null) {
     const modal = document.getElementById('calculatorModal');
     if (modal) {
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+        
+        // Если передан leadId, инициализируем калькулятор для этого лида
+        if (leadId) {
+            const lead = leads.find(l => l.id === leadId);
+            if (lead) {
+                currentLeadForCalculation = lead;
+                
+                // Заполняем данные клиента
+                document.getElementById('modalClientName').value = lead.clientName || lead.name || '';
+                document.getElementById('modalComments').value = lead.comments || lead.notes || '';
+                document.getElementById('modalCalculationDate').value = new Date().toLocaleDateString('ru-RU');
+                document.getElementById('modalManager').value = currentUser?.full_name || '';
+                
+                // Если у лида есть расчет, загружаем его
+                if (lead.calculation && lead.calculation.items) {
+                    modalServices = lead.calculation.items.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        quantity: item.quantity || 1,
+                        price: item.price || 0,
+                        total: item.total || 0
+                    }));
+                    nextServiceId = Math.max(...modalServices.map(s => s.id), 0) + 1;
+                } else {
+                    modalServices = [];
+                    nextServiceId = 1;
+                }
+                
+                updateModalServicesList();
+                calculateTotalInModal();
+                
+                // Показываем форму нового расчета
+                document.getElementById('newCalculationForm').classList.remove('hidden');
+            }
+        }
     }
 }
 
@@ -105,10 +140,21 @@ function hideCalculatorModal() {
         document.body.style.overflow = '';
     }
     
+    // Обновляем детали лида, если они открыты
+    if (currentLeadForCalculation && typeof window.populateLeadCalculations === 'function') {
+        window.populateLeadCalculations(currentLeadForCalculation);
+    }
+    
     // Очищаем данные
     currentLeadForCalculation = null;
     modalServices = [];
     nextServiceId = 1;
+    
+    // Скрываем форму нового расчета
+    const newCalculationForm = document.getElementById('newCalculationForm');
+    if (newCalculationForm) {
+        newCalculationForm.classList.add('hidden');
+    }
 }
 
 function populateCalculatorModal(lead) {
@@ -602,6 +648,31 @@ function saveCalculationFromModal() {
     
     // Сохраняем в localStorage
     saveCalculationsToStorage();
+    
+    // Обновляем расчет в лиде
+    const leadIndex = leads.findIndex(l => l.id === currentLeadForCalculation.id);
+    if (leadIndex !== -1) {
+        leads[leadIndex].calculation = {
+            items: [...modalServices],
+            total: calculationData.totalAmount,
+            markup: 0 // Можно добавить наценку позже
+        };
+        leads[leadIndex].updatedAt = new Date().toISOString();
+        
+        // Сохраняем обновленные лиды
+        localStorage.setItem('ff-leads', JSON.stringify(leads));
+        
+        // Обновляем UI
+        if (typeof updateLeadsTable === 'function') {
+            updateLeadsTable();
+        }
+        if (typeof updateKanbanBoard === 'function') {
+            updateKanbanBoard();
+        }
+        if (typeof updateDashboard === 'function') {
+            updateDashboard();
+        }
+    }
     
     showNotification('Расчет сохранен', 'success');
     console.log('Сохраненный расчет:', calculationData);
