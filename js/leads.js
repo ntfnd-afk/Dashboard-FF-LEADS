@@ -383,51 +383,70 @@ function populateLeadDetails(lead) {
 }
 
 function populateLeadCalculations(lead) {
-    const calculationsContainer = document.getElementById('leadDetailsCalculations');
-    if (!calculationsContainer) return;
+    const calculationsSection = document.getElementById('leadDetailsCalculations');
+    if (!calculationsSection) return;
     
-    // Проверяем, есть ли у лида расчеты
-    if (lead.calculation && lead.calculation.items && lead.calculation.items.length > 0) {
-        // Есть расчеты - показываем их
-        const totalAmount = lead.calculation.total || 0;
-        calculationsContainer.innerHTML = `
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <h5 class="text-md font-semibold text-gray-900 dark:text-white">Текущий расчет</h5>
-                    <span class="text-lg font-bold text-green-600 dark:text-green-400">${formatCurrency(totalAmount)}</span>
+    // Получаем расчеты для лида
+    const leadCalculations = typeof window.getCalculationsForLead === 'function' ? 
+        window.getCalculationsForLead(lead.id) : [];
+    
+    if (leadCalculations.length === 0) {
+        calculationsSection.innerHTML = `
+            <div class="text-center py-6">
+                <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="calculator" class="h-6 w-6 text-gray-400"></i>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
-                    <div class="space-y-2">
-                        ${lead.calculation.items.map(item => `
-                            <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
-                                <span class="text-gray-900 dark:text-white">${item.name}</span>
-                                <span class="font-semibold text-gray-900 dark:text-white">${formatCurrency(item.total)}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                <div class="flex space-x-3">
-                    <button onclick="openLeadCalculatorFromDetails()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center">
-                        <i data-lucide="edit" class="h-4 w-4 mr-2"></i>
-                        Редактировать расчет
-                    </button>
-                    <button onclick="openLeadCalculatorFromDetails()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center">
-                        <i data-lucide="plus" class="h-4 w-4 mr-2"></i>
-                        Новый расчет
-                    </button>
-                </div>
-            </div>
-        `;
-    } else {
-        // Нет расчетов - показываем кнопку добавления
-        calculationsContainer.innerHTML = `
-            <div class="text-center text-gray-500 dark:text-gray-400">
-                <i data-lucide="calculator" class="h-12 w-12 mx-auto mb-3 text-gray-400"></i>
-                <p class="mb-4">Расчетов не найдено</p>
-                <button onclick="openLeadCalculatorFromDetails()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center mx-auto">
+                <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                    Расчетов не найдено
+                </h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                    Для этого лида еще не было создано расчетов
+                </p>
+                <button onclick="openLeadCalculatorFromDetails()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center mx-auto text-sm">
                     <i data-lucide="plus" class="h-4 w-4 mr-2"></i>
                     Добавить расчет
                 </button>
+            </div>
+        `;
+    } else {
+        const totalAmount = leadCalculations.reduce((sum, calc) => sum + (calc.totalAmount || 0), 0);
+        
+        calculationsSection.innerHTML = `
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                            Расчеты (${leadCalculations.length})
+                        </h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            Общая сумма: <span class="font-semibold text-green-600 dark:text-green-400">${formatCurrency(totalAmount)}</span>
+                        </p>
+                    </div>
+                    <button onclick="openLeadCalculatorFromDetails()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center text-xs">
+                        <i data-lucide="plus" class="h-3 w-3 mr-1"></i>
+                        Добавить
+                    </button>
+                </div>
+                
+                <div class="space-y-2">
+                    ${leadCalculations.slice(0, 3).map(calc => `
+                        <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div>
+                                <div class="text-xs font-medium text-gray-900 dark:text-white">#${calc.id}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${calc.calculationDate || 'Без даты'}</div>
+                            </div>
+                            <div class="text-xs font-semibold text-gray-900 dark:text-white">${formatCurrency(calc.totalAmount || 0)}</div>
+                        </div>
+                    `).join('')}
+                    
+                    ${leadCalculations.length > 3 ? `
+                        <div class="text-center">
+                            <button onclick="openCalculatorForLead(${lead.id})" class="text-xs text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                Показать все расчеты (${leadCalculations.length})
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
             </div>
         `;
     }
@@ -563,7 +582,7 @@ function updateLeadsTableWithData(leadsToShow) {
     if (leadsToShow.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     Нет лидов. Нажмите "Добавить лид" для создания первого лида.
                 </td>
             </tr>
@@ -593,6 +612,9 @@ function updateLeadsTableWithData(leadsToShow) {
                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(lead.status)}">
                     ${getStatusText(lead.status)}
                 </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                ${createCalculationsCell(lead)}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                 ${formatDate(lead.createdAt || lead.created_at)}
@@ -818,3 +840,72 @@ window.createReminderFromDetails = createReminderFromDetails;
 window.changeStatusFromDetails = changeStatusFromDetails;
 window.deleteLeadFromDetails = deleteLeadFromDetails;
 window.convertLeadFromDetails = convertLeadFromDetails;
+
+// Функции для работы с расчетами в таблице лидов
+function createCalculationsCell(lead) {
+    // Получаем расчеты для лида
+    const leadCalculations = typeof window.getCalculationsForLead === 'function' ? 
+        window.getCalculationsForLead(lead.id) : [];
+    
+    if (leadCalculations.length === 0) {
+        return `
+            <div class="flex items-center space-x-2">
+                <span class="text-gray-400">Нет расчетов</span>
+                <button onclick="openCalculatorForLead(${lead.id})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300" title="Создать расчет">
+                    <i data-lucide="plus" class="h-4 w-4"></i>
+                </button>
+            </div>
+        `;
+    }
+    
+    const totalAmount = leadCalculations.reduce((sum, calc) => sum + (calc.totalAmount || 0), 0);
+    
+    return `
+        <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+                <span class="text-sm font-medium text-gray-900 dark:text-white">${leadCalculations.length} расчетов</span>
+                <span class="text-sm font-bold text-green-600 dark:text-green-400">${formatCurrency(totalAmount)}</span>
+            </div>
+            <button onclick="toggleCalculationsAccordion(${lead.id})" class="text-xs text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                <i data-lucide="chevron-down" class="h-3 w-3 mr-1 inline"></i>
+                Показать расчеты
+            </button>
+            <div id="calculations-${lead.id}" class="hidden mt-2 space-y-1">
+                ${leadCalculations.map(calc => `
+                    <div class="text-xs bg-gray-50 dark:bg-gray-700 rounded p-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700 dark:text-gray-300">#${calc.id}</span>
+                            <span class="font-semibold text-gray-900 dark:text-white">${formatCurrency(calc.totalAmount || 0)}</span>
+                        </div>
+                        <div class="text-gray-500 dark:text-gray-400">${calc.calculationDate || 'Без даты'}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function toggleCalculationsAccordion(leadId) {
+    const accordion = document.getElementById(`calculations-${leadId}`);
+    if (accordion) {
+        accordion.classList.toggle('hidden');
+        
+        // Обновляем иконку
+        const button = accordion.previousElementSibling;
+        const icon = button.querySelector('i');
+        if (accordion.classList.contains('hidden')) {
+            icon.setAttribute('data-lucide', 'chevron-down');
+        } else {
+            icon.setAttribute('data-lucide', 'chevron-up');
+        }
+        
+        // Обновляем иконки Lucide
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+}
+
+// Экспортируем новые функции
+window.createCalculationsCell = createCalculationsCell;
+window.toggleCalculationsAccordion = toggleCalculationsAccordion;

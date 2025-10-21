@@ -85,9 +85,9 @@ function openCalculatorForLead(leadId) {
     // Загружаем расчеты для этого лида
     const leadCalculations = getCalculationsForLead(leadId);
     
-    // Показываем модальное окно с историей расчетов
-    populateCalculatorHistory(lead, leadCalculations);
+    // Показываем модальное окно со списком расчетов
     showCalculatorModal();
+    showCalculationsList(leadCalculations);
 }
 
 function showCalculatorModal(leadId = null) {
@@ -107,33 +107,14 @@ function showCalculatorModal(leadId = null) {
                 document.getElementById('modalComments').value = lead.comments || lead.notes || '';
                 document.getElementById('modalCalculationDate').value = new Date().toLocaleDateString('ru-RU');
                 document.getElementById('modalManager').value = currentUser?.full_name || '';
+                document.getElementById('modalCalculationNumber').value = generateCalculationNumber();
                 
-                // Если у лида есть расчет, загружаем его
-                if (lead.calculation && lead.calculation.items) {
-                    modalServices = lead.calculation.items.map(item => ({
-                        id: item.id,
-                        name: item.name,
-                        quantity: item.quantity || 1,
-                        price: item.price || 0,
-                        total: item.total || 0
-                    }));
-                    nextServiceId = Math.max(...modalServices.map(s => s.id), 0) + 1;
-                } else {
-                    modalServices = [];
-                    nextServiceId = 1;
-                }
+                // Очищаем услуги для нового расчета
+                modalServices = [];
+                nextServiceId = 1;
                 
-                updateModalServicesList();
-                calculateTotalInModal();
-                
-                // Показываем форму нового расчета
-                const newCalculationForm = document.getElementById('newCalculationForm');
-                if (newCalculationForm) {
-                    newCalculationForm.classList.remove('hidden');
-                } else {
-                    // Если формы нет, создаем её
-                    showNewCalculationForm();
-                }
+                // Показываем форму нового расчета сразу
+                showNewCalculationForm();
             }
         }
     }
@@ -428,26 +409,26 @@ function createNewCalculationForm() {
 function showNewCalculationForm() {
     console.log('showNewCalculationForm вызвана');
     
-    // Проверяем, есть ли уже форма в DOM
-    let form = document.getElementById('newCalculationForm');
+    // Обновляем заголовок модального окна
+    const modalTitle = document.getElementById('calculatorModalTitle');
+    const modalSubtitle = document.getElementById('calculatorModalSubtitle');
     
-    if (!form) {
-        // Если формы нет, создаем её
-        const modalContent = document.getElementById('calculatorModalContent');
-        if (modalContent) {
-            // Добавляем форму в конец содержимого модального окна
-            modalContent.insertAdjacentHTML('beforeend', `
-                <div id="newCalculationForm" class="mt-6">
-                    ${createNewCalculationForm()}
-                </div>
-            `);
-            form = document.getElementById('newCalculationForm');
-        }
+    if (modalTitle && currentLeadForCalculation) {
+        modalTitle.textContent = `Новый расчет для: ${currentLeadForCalculation.clientName || currentLeadForCalculation.name}`;
     }
     
-    console.log('Форма найдена:', form);
-    if (form) {
-        form.classList.remove('hidden');
+    if (modalSubtitle && currentLeadForCalculation) {
+        modalSubtitle.textContent = `Лид #${currentLeadForCalculation.id.toString().padStart(4, '0')}`;
+    }
+    
+    // Очищаем содержимое модального окна и добавляем форму
+    const modalContent = document.getElementById('calculatorModalContent');
+    if (modalContent) {
+        modalContent.innerHTML = `
+            <div id="newCalculationForm">
+                ${createNewCalculationForm()}
+            </div>
+        `;
         
         // Заполняем форму данными лида
         if (currentLeadForCalculation) {
@@ -466,7 +447,7 @@ function showNewCalculationForm() {
         
         lucide.createIcons();
     } else {
-        console.error('Элемент newCalculationForm не найден и не может быть создан');
+        console.error('Элемент calculatorModalContent не найден');
     }
 }
 
@@ -697,12 +678,66 @@ function saveCalculationFromModal() {
     showNotification('Расчет сохранен', 'success');
     console.log('Сохраненный расчет:', calculationData);
     
-    // Обновляем отображение модального окна
+    // Показываем список всех расчетов лида
     const leadCalculations = getCalculationsForLead(currentLeadForCalculation.id);
-    populateCalculatorHistory(currentLeadForCalculation, leadCalculations);
+    showCalculationsList(leadCalculations);
+}
+
+// Показать список расчетов лида
+function showCalculationsList(calculations) {
+    const modalTitle = document.getElementById('calculatorModalTitle');
+    const modalSubtitle = document.getElementById('calculatorModalSubtitle');
+    const modalContent = document.getElementById('calculatorModalContent');
     
-    // Скрываем форму нового расчета
-    hideNewCalculationForm();
+    if (modalTitle && currentLeadForCalculation) {
+        modalTitle.textContent = `Расчеты для: ${currentLeadForCalculation.clientName || currentLeadForCalculation.name}`;
+    }
+    
+    if (modalSubtitle && currentLeadForCalculation) {
+        modalSubtitle.textContent = `Лид #${currentLeadForCalculation.id.toString().padStart(4, '0')} - ${calculations.length} расчетов`;
+    }
+    
+    if (modalContent) {
+        if (calculations.length === 0) {
+            modalContent.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="calculator" class="h-8 w-8 text-gray-400"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        Расчетов не найдено
+                    </h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-6">
+                        Для этого лида еще не было создано расчетов
+                    </p>
+                    <button onclick="showNewCalculationForm()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center mx-auto">
+                        <i data-lucide="plus" class="h-5 w-5 mr-2"></i>
+                        Добавить расчет
+                    </button>
+                </div>
+            `;
+        } else {
+            modalContent.innerHTML = `
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            История расчетов (${calculations.length})
+                        </h3>
+                        <button onclick="showNewCalculationForm()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center">
+                            <i data-lucide="plus" class="h-4 w-4 mr-2"></i>
+                            Добавить расчет
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        ${calculations.map(calc => createCalculationCard(calc)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    lucide.createIcons();
 }
 
 // Просмотр расчета
