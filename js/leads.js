@@ -214,7 +214,22 @@ function openLeadDetails(leadId) {
 // ========================================
 
 function updateLeadsTable() {
+    // Показываем краткий индикатор загрузки при обновлении таблицы
+    if (typeof showLoading === 'function') {
+        showLoading('Обновление списка лидов...');
+    }
+    
     updateLeadsTableWithData(leads);
+    
+    // Обновляем селекторы фильтров при обновлении таблицы лидов
+    updateSelectOptions();
+    
+    // Скрываем индикатор загрузки
+    if (typeof hideLoading === 'function') {
+        setTimeout(() => {
+            hideLoading();
+        }, 200);
+    }
 }
 
 function updateLeadsTableWithData(leadsToShow) {
@@ -329,42 +344,52 @@ function getStatusColor(statusId) {
 }
 
 function updateSelectOptions() {
+    console.log('🔄 Обновляем селекторы фильтров...');
+    console.log('leadStatuses:', leadStatuses);
+    console.log('leadSources:', leadSources);
+    
     // Обновляем селект статусов в форме добавления лида
     const statusSelect = document.getElementById('leadStatus');
-    if (statusSelect) {
+    if (statusSelect && leadStatuses && leadStatuses.length > 0) {
         statusSelect.innerHTML = leadStatuses.map(status => 
             `<option value="${status.id}">${status.name}</option>`
         ).join('');
+        console.log('✅ Селект статусов в форме обновлен');
     }
 
     // Обновляем селект источников в форме добавления лида
     const sourceSelect = document.getElementById('leadSource');
-    if (sourceSelect) {
+    if (sourceSelect && leadSources && leadSources.length > 0) {
         sourceSelect.innerHTML = leadSources.map(source => 
             `<option value="${source.id}">${source.name}</option>`
         ).join('');
+        console.log('✅ Селект источников в форме обновлен');
     }
 
     // Обновляем селекты в фильтрах
     const statusFilter = document.getElementById('statusFilter');
-    if (statusFilter) {
+    if (statusFilter && leadStatuses && leadStatuses.length > 0) {
         statusFilter.innerHTML = `
             <option value="">Все статусы</option>
             ${leadStatuses.map(status => 
                 `<option value="${status.id}">${status.name}</option>`
             ).join('')}
         `;
+        console.log('✅ Фильтр статусов обновлен');
     }
 
     const sourceFilter = document.getElementById('sourceFilter');
-    if (sourceFilter) {
+    if (sourceFilter && leadSources && leadSources.length > 0) {
         sourceFilter.innerHTML = `
             <option value="">Все источники</option>
             ${leadSources.map(source => 
                 `<option value="${source.id}">${source.name}</option>`
             ).join('')}
         `;
+        console.log('✅ Фильтр источников обновлен');
     }
+    
+    console.log('✅ Все селекторы обновлены');
 }
 
 // ========================================

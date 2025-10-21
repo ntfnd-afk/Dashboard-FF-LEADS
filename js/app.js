@@ -75,6 +75,29 @@ var services = [
 var importServicesData = null; // Данные для импорта услуг
 
 // ========================================
+// LOADING INDICATOR FUNCTIONS
+// ========================================
+
+function showLoading(text = 'Загрузка данных...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+    
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        if (loadingText) {
+            loadingText.textContent = text;
+        }
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+    }
+}
+
+// ========================================
 // UTILITY FUNCTIONS
 // ========================================
 
@@ -159,6 +182,9 @@ function formatCurrency(amount) {
 // ========================================
 
 function showTab(tabName) {
+    // Показываем индикатор загрузки при переключении вкладок
+    showLoading('Переключение вкладки...');
+    
     // Hide all tab contents
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.add('hidden');
@@ -189,9 +215,18 @@ function showTab(tabName) {
         updateDashboard();
     } else if (tabName === 'leads') {
         updateLeadsTable();
+        // Обновляем селекторы фильтров при переходе на вкладку лидов
+        if (typeof updateSelectOptions === 'function') {
+            updateSelectOptions();
+        }
     } else if (tabName === 'kanban') {
         updateKanbanBoard();
     }
+    
+    // Скрываем индикатор загрузки после обновления вкладки
+    setTimeout(() => {
+        hideLoading();
+    }, 300);
 }
 
 // ========================================
@@ -243,10 +278,18 @@ function loadFromLocalStorage() {
     }
 
     console.log('📱 Данные загружены из localStorage');
+    
+    // Обновляем селекторы фильтров после загрузки данных
+    if (typeof updateSelectOptions === 'function') {
+        updateSelectOptions();
+    }
 }
 
 async function loadData() {
     try {
+        // Показываем индикатор загрузки
+        showLoading('Загрузка данных...');
+        
         // Сначала всегда загружаем из localStorage как fallback
         console.log('🔄 Начинаем загрузку данных...');
         loadFromLocalStorage();
@@ -379,6 +422,11 @@ async function loadData() {
         updateRemindersList();
         updateGlobalRemindersList();
         updateConnectionStatus();
+        
+        // Обновляем селекторы фильтров
+        if (typeof updateSelectOptions === 'function') {
+            updateSelectOptions();
+        }
 
     } catch (error) {
         console.error('Ошибка загрузки данных:', error);
@@ -386,12 +434,23 @@ async function loadData() {
         
         // Загружаем из localStorage в случае ошибки
         loadFromLocalStorage();
+        
+        // Обновляем селекторы фильтров
+        if (typeof updateSelectOptions === 'function') {
+            updateSelectOptions();
+        }
+        
+        // Скрываем индикатор загрузки
+        hideLoading();
     }
     
     // Обновляем UI после загрузки данных
     if (typeof updateGlobalRemindersList === 'function') {
         updateGlobalRemindersList();
     }
+    
+    // Скрываем индикатор загрузки
+    hideLoading();
 }
 
 function saveData() {
@@ -419,6 +478,9 @@ function saveData() {
 
 // App initialization functions (called from index.html)
 function initializeApp() {
+    // Показываем индикатор загрузки при инициализации
+    showLoading('Инициализация приложения...');
+    
     // Проверяем авторизацию
     const savedUser = localStorage.getItem('ff-current-user');
     if (savedUser) {
@@ -457,7 +519,7 @@ function initializeApp() {
         currentDateElement.value = currentDate;
     }
     
-    // Принудительно обновляем UI напоминаний после полной инициализации
+    // Принудительно обновляем UI напоминаний и селекторы после полной инициализации
     setTimeout(() => {
         if (typeof updateGlobalRemindersList === 'function') {
             console.log('Принудительно обновляем UI напоминаний в initializeApp');
@@ -465,6 +527,16 @@ function initializeApp() {
         } else {
             console.log('Функция updateGlobalRemindersList все еще не загружена');
         }
+        
+        if (typeof updateSelectOptions === 'function') {
+            console.log('Принудительно обновляем селекторы в initializeApp');
+            updateSelectOptions();
+        } else {
+            console.log('Функция updateSelectOptions все еще не загружена');
+        }
+        
+        // Скрываем индикатор загрузки после полной инициализации
+        hideLoading();
     }, 500);
 }
 
@@ -502,12 +574,16 @@ window.FFApp = {
     showTab,
     loadData,
     saveData,
-    initializeApp
+    initializeApp,
+    showLoading,
+    hideLoading
 };
 
 // Make functions available globally for onclick attributes
 window.showTab = showTab;
 window.loadData = loadData;
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
 window.saveData = saveData;
 window.updateConnectionStatus = updateConnectionStatus;
 window.showNotification = showNotification;
