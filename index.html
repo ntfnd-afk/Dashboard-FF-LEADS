@@ -758,59 +758,84 @@
                         </div>
                     </div>
                     
-                    <!-- Telegram Settings -->
+        <!-- Telegram Settings -->
+        <div>
+            <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Telegram уведомления</h4>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Токен бота Telegram
+                    </label>
+                    <input type="text" id="telegramBotToken" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Получите токен у @BotFather в Telegram
+                    </p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Тип чата
+                    </label>
+                    <select id="telegramChatType" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                        <option value="group">Группа</option>
+                        <option value="channel">Канал</option>
+                        <option value="private">Личный чат</option>
+                    </select>
+                </div>
+                
+                <div id="telegramGroupFields">
                     <div>
-                        <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Telegram уведомления</h4>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Токен бота
-                                </label>
-                                <input type="text" id="telegramBotToken" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Тип чата
-                                </label>
-                                <select id="telegramChatType" onchange="toggleTelegramChatFields()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-                                    <option value="personal">Личные сообщения</option>
-                                    <option value="group">Групповой чат</option>
-                                </select>
-                            </div>
-                            
-                            <div id="personalChatFields">
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    ID чата (для личных сообщений)
-                                </label>
-                                <input type="text" id="telegramChatId" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="123456789">
-                            </div>
-                            
-                            <div id="groupChatFields" style="display: none;">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            ID группы
-                                        </label>
-                                        <input type="text" id="telegramGroupId" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="-123456789">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Ваш Telegram ID (для тегов)
-                                        </label>
-                                        <input type="text" id="telegramUserId" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="@username">
-                                    </div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            ID группы/канала
+                        </label>
+                        <input type="text" id="telegramGroupId" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="-1001234567890">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Для групп начинается с -100, для каналов с @
+                        </p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Ваш Telegram ID (для тегов в напоминаниях)
+                    </label>
+                    <input type="text" id="telegramUserId" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="@username или ID">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Укажите ваш Telegram username (например: @username) или ID для тегов в напоминаниях
+                    </p>
+                </div>
+                
+                <!-- Дополнительные настройки -->
+                <div class="space-y-4">
+                    <div>
+                        <h5 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Дополнительные настройки</h5>
+                        <div class="space-y-3">
+                            <label class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <input type="checkbox" id="telegramSilentMode" class="mr-3">
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Тихий режим для обычных сообщений</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Обычные сообщения будут приходить без звука</div>
                                 </div>
-                            </div>
-                            
-                            <div class="flex space-x-4">
-                                <button onclick="testTelegramConnection()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-                                    <i data-lucide="send" class="h-4 w-4 mr-2 inline"></i>
-                                    Тест подключения
-                                </button>
-                            </div>
+                            </label>
+                            <label class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <input type="checkbox" id="telegramTagForReminders" class="mr-3">
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Тегать пользователей в напоминаниях</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Напоминания будут тегать конкретных пользователей</div>
+                                </div>
+                            </label>
                         </div>
                     </div>
+                    
+                    <div class="flex space-x-4">
+                        <button onclick="testTelegramConnection()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                            <i data-lucide="send" class="h-4 w-4 mr-2 inline"></i>
+                            Тест подключения
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
                 </div>
             </div>
             

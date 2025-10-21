@@ -13,12 +13,18 @@ var reminders = [];
 var nextReminderId = 1;
 var currentUser = null;
 var users = [];
+// Захардкоженные настройки Telegram (неизменяемые)
+var TELEGRAM_CONFIG = {
+    botToken: 'YOUR_BOT_TOKEN_HERE', // Замените на ваш токен бота
+    chatType: 'group', // Всегда групповой чат
+    groupId: 'YOUR_GROUP_ID_HERE' // Замените на ID вашей группы (например: -1001234567890)
+};
+
+// Пользовательские настройки Telegram (изменяемые)
 var globalTelegramSettings = {
-    botToken: '',
-    chatType: 'personal', // 'personal' or 'group'
-    chatId: '', // for personal messages
-    groupId: '', // for group messages
-    userId: '' // user ID for tagging in groups
+    userId: '', // user ID for tagging in groups (пользователь может менять)
+    silentMode: true, // тихий режим для обычных сообщений
+    tagForReminders: true // тегать пользователей для напоминаний
 };
 
 // API Configuration
@@ -502,6 +508,7 @@ window.FFApp = {
     currentUser,
     users,
     globalTelegramSettings,
+    TELEGRAM_CONFIG,
     API_BASE_URL,
     isOnline,
     leadStatuses,

@@ -419,33 +419,43 @@ function showBrowserNotification(message) {
     }
 }
 
-async function sendTelegramNotification(message) {
+async function sendTelegramNotification(message, isReminder = true) {
     console.log('Отправляем Telegram уведомление:', message);
     console.log('Настройки Telegram:', globalTelegramSettings);
     
-    if (!globalTelegramSettings.botToken) {
-        console.log('Bot token не настроен');
+    if (!TELEGRAM_CONFIG.botToken || TELEGRAM_CONFIG.botToken === 'YOUR_BOT_TOKEN_HERE') {
+        console.log('Bot token не настроен в TELEGRAM_CONFIG');
         return;
     }
 
     try {
-        const telegramMessage = `🔔 Напоминание: ${message}`;
-        let url = `https://api.telegram.org/bot${globalTelegramSettings.botToken}/sendMessage`;
+        let telegramMessage;
+        let disableNotification = false;
         
-        let chatId = globalTelegramSettings.chatId;
-        if (globalTelegramSettings.chatType === 'group') {
-            chatId = globalTelegramSettings.groupId;
+        if (isReminder) {
+            // Для напоминаний - с уведомлением и тегом
+            telegramMessage = `🔔 Напоминание: ${message}`;
+            disableNotification = false; // Напоминания должны быть с уведомлением
+            
+            // Добавляем тег пользователя для групповых чатов
+            if (TELEGRAM_CONFIG.chatType === 'group' && globalTelegramSettings.userId && globalTelegramSettings.tagForReminders) {
+                telegramMessage += `\n\n👤 @${globalTelegramSettings.userId}`;
+            }
+        } else {
+            // Для обычных сообщений - тихий режим
+            telegramMessage = `📢 ${message}`;
+            disableNotification = globalTelegramSettings.silentMode; // Используем настройку тихого режима
         }
-
+        
+        let url = `https://api.telegram.org/bot${TELEGRAM_CONFIG.botToken}/sendMessage`;
+        
         const payload = {
-            chat_id: chatId,
-            text: telegramMessage
+            chat_id: TELEGRAM_CONFIG.groupId,
+            text: telegramMessage,
+            disable_notification: disableNotification
         };
 
-        // Добавляем тег пользователя для групповых чатов
-        if (globalTelegramSettings.chatType === 'group' && globalTelegramSettings.userId) {
-            payload.text += `\n\n@${globalTelegramSettings.userId}`;
-        }
+        console.log('Отправляем в Telegram:', payload);
 
         const response = await fetch(url, {
             method: 'POST',
@@ -455,6 +465,8 @@ async function sendTelegramNotification(message) {
 
         if (!response.ok) {
             console.error('Ошибка отправки Telegram уведомления');
+        } else {
+            console.log('Telegram уведомление отправлено успешно');
         }
     } catch (error) {
         console.error('Ошибка отправки Telegram уведомления:', error);
@@ -475,29 +487,38 @@ function hideNotificationSettings() {
 }
 
 function loadNotificationSettings() {
-    // Загружаем текущие настройки
-    document.getElementById('telegramBotToken').value = globalTelegramSettings.botToken || '';
-    document.getElementById('telegramChatType').value = globalTelegramSettings.chatType || 'personal';
-    document.getElementById('telegramChatId').value = globalTelegramSettings.chatId || '';
-    document.getElementById('telegramGroupId').value = globalTelegramSettings.groupId || '';
+    // Загружаем все настройки Telegram
+    document.getElementById('telegramBotToken').value = TELEGRAM_CONFIG.botToken || '';
+    document.getElementById('telegramChatType').value = TELEGRAM_CONFIG.chatType || 'group';
+    document.getElementById('telegramGroupId').value = TELEGRAM_CONFIG.groupId || '';
     document.getElementById('telegramUserId').value = globalTelegramSettings.userId || '';
     
+    // Загружаем дополнительные настройки
+    document.getElementById('telegramSilentMode').checked = globalTelegramSettings.silentMode !== false; // по умолчанию true
+    document.getElementById('telegramTagForReminders').checked = globalTelegramSettings.tagForReminders !== false; // по умолчанию true
+    
+    // Проверяем статус уведомлений браузера
     updateNotificationStatus();
 }
 
 async function saveNotificationSettings() {
     const botToken = document.getElementById('telegramBotToken').value.trim();
     const chatType = document.getElementById('telegramChatType').value;
-    const chatId = document.getElementById('telegramChatId').value.trim();
     const groupId = document.getElementById('telegramGroupId').value.trim();
     const userId = document.getElementById('telegramUserId').value.trim();
+    const silentMode = document.getElementById('telegramSilentMode').checked;
+    const tagForReminders = document.getElementById('telegramTagForReminders').checked;
 
+    // Обновляем TELEGRAM_CONFIG
+    TELEGRAM_CONFIG.botToken = botToken;
+    TELEGRAM_CONFIG.chatType = chatType;
+    TELEGRAM_CONFIG.groupId = groupId;
+
+    // Обновляем пользовательские настройки
     globalTelegramSettings = {
-        botToken,
-        chatType,
-        chatId,
-        groupId,
-        userId
+        userId,
+        silentMode,
+        tagForReminders
     };
 
     try {
@@ -507,7 +528,14 @@ async function saveNotificationSettings() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     key: 'telegram_settings',
-                    value: JSON.stringify(globalTelegramSettings)
+                    value: JSON.stringify({
+                        botToken,
+                        chatType,
+                        groupId,
+                        userId,
+                        silentMode,
+                        tagForReminders
+                    })
                 })
             });
             
@@ -516,7 +544,14 @@ async function saveNotificationSettings() {
             }
         }
         
-        localStorage.setItem('ff-global-telegram-settings', JSON.stringify(globalTelegramSettings));
+        localStorage.setItem('ff-global-telegram-settings', JSON.stringify({
+            botToken,
+            chatType,
+            groupId,
+            userId,
+            silentMode,
+            tagForReminders
+        }));
         hideNotificationSettings();
         showNotification('Настройки уведомлений сохранены', 'success');
         
@@ -527,34 +562,25 @@ async function saveNotificationSettings() {
 }
 
 async function testTelegramConnection() {
-    const botToken = document.getElementById('telegramBotToken').value.trim();
-    const chatType = document.getElementById('telegramChatType').value;
-    const chatId = document.getElementById('telegramChatId').value.trim();
-    const groupId = document.getElementById('telegramGroupId').value.trim();
+    if (!TELEGRAM_CONFIG.botToken || TELEGRAM_CONFIG.botToken === 'YOUR_BOT_TOKEN_HERE') {
+        showNotification('Токен бота не настроен в системе', 'error');
+        return;
+    }
 
-    if (!botToken) {
-        showNotification('Введите токен бота', 'error');
+    if (!TELEGRAM_CONFIG.groupId || TELEGRAM_CONFIG.groupId === 'YOUR_GROUP_ID_HERE') {
+        showNotification('ID группы не настроен в системе', 'error');
         return;
     }
 
     try {
-        let testChatId = chatId;
-        if (chatType === 'group') {
-            testChatId = groupId;
-        }
-
-        if (!testChatId) {
-            showNotification('Введите ID чата', 'error');
-            return;
-        }
-
-        const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        const url = `https://api.telegram.org/bot${TELEGRAM_CONFIG.botToken}/sendMessage`;
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                chat_id: testChatId,
-                text: '🧪 Тестовое сообщение от FF Dashboard'
+                chat_id: TELEGRAM_CONFIG.groupId,
+                text: '🧪 Тестовое сообщение от FF Dashboard',
+                disable_notification: true // Тестовые сообщения всегда тихие
             })
         });
 
