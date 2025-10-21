@@ -3,11 +3,49 @@
 // ========================================
 
 // ========================================
+// FIELD VALIDATION FUNCTIONS
+// ========================================
+
+function showFieldError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        field.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-900');
+        field.classList.remove('border-gray-300', 'dark:border-gray-600');
+        
+        // Добавляем сообщение об ошибке
+        let errorDiv = field.parentNode.querySelector('.field-error');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'field-error text-red-500 text-sm mt-1';
+            field.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = message;
+    }
+}
+
+function clearFieldErrors() {
+    const fields = ['leadClientName', 'leadPhone', 'leadSource', 'leadStatus'];
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.remove('border-red-500', 'bg-red-50', 'dark:bg-red-900');
+            field.classList.add('border-gray-300', 'dark:border-gray-600');
+            
+            const errorDiv = field.parentNode.querySelector('.field-error');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+    });
+}
+
+// ========================================
 // LEAD MANAGEMENT FUNCTIONS
 // ========================================
 
 function showAddLeadModal() {
     updateSelectOptions(); // Обновляем селекты перед показом модального окна
+    clearFieldErrors(); // Очищаем ошибки валидации
     
     // Проверяем, редактируем ли мы лид
     const editingId = document.getElementById('addLeadModal').getAttribute('data-editing-id');
@@ -48,8 +86,34 @@ async function addLead() {
     const comments = document.getElementById('leadComments').value.trim();
     const createCalculation = document.getElementById('createCalculation').checked;
 
+    // Валидация обязательных полей
+    let hasErrors = false;
+    
+    // Очищаем предыдущие ошибки
+    clearFieldErrors();
+    
     if (!clientName) {
-        showNotification('Введите название компании', 'error');
+        showFieldError('leadClientName', 'Название компании обязательно');
+        hasErrors = true;
+    }
+    
+    if (!phone) {
+        showFieldError('leadPhone', 'Телефон обязателен');
+        hasErrors = true;
+    }
+    
+    if (!source) {
+        showFieldError('leadSource', 'Источник обязателен');
+        hasErrors = true;
+    }
+    
+    if (!status) {
+        showFieldError('leadStatus', 'Статус обязателен');
+        hasErrors = true;
+    }
+
+    if (hasErrors) {
+        showNotification('Заполните все обязательные поля', 'error');
         return;
     }
 
@@ -63,7 +127,7 @@ async function addLead() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: clientName,
-                    phone: contact,
+                    phone: phone,
                     source: source,
                     status: status,
                     notes: comments
@@ -92,7 +156,7 @@ async function addLead() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: clientName,
-                    phone: contact,
+                    phone: phone,
                     source: source,
                     status: status,
                     notes: comments

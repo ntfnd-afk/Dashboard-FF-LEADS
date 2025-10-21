@@ -100,6 +100,25 @@
             background: #a0aec0;
         }
         
+        /* Адаптивные стили для канбана */
+        @media (max-width: 1200px) {
+            .kanban-column {
+                min-width: 200px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .kanban-column {
+                min-width: 180px;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .kanban-column {
+                min-width: 160px;
+            }
+        }
+        
         .modal-content {
             position: relative;
             max-height: 90vh;
@@ -1025,7 +1044,7 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Телефон
+                            Телефон *
                         </label>
                         <input type="tel" id="leadPhone" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="+7 (999) 123-45-67">
                     </div>
@@ -1039,7 +1058,7 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Источник
+                            Источник *
                         </label>
                         <select id="leadSource" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
                             <!-- Опции будут загружены динамически -->
@@ -1048,7 +1067,7 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Статус
+                            Статус *
                         </label>
                         <select id="leadStatus" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
                             <!-- Опции будут загружены динамически -->

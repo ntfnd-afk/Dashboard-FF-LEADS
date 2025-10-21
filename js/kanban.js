@@ -64,6 +64,20 @@ function createDynamicKanbanStructure() {
     const pipelineContainer = document.querySelector('#kanban-content .flex');
     if (!pipelineContainer) return;
 
+    // Рассчитываем оптимальную ширину колонок
+    const statusCount = leadStatuses.length;
+    let columnWidth = 'w-64'; // По умолчанию 256px
+    
+    if (statusCount <= 3) {
+        columnWidth = 'w-80'; // Больше места для 3 колонок
+    } else if (statusCount <= 5) {
+        columnWidth = 'w-64'; // Стандартная ширина для 4-5 колонок
+    } else if (statusCount <= 7) {
+        columnWidth = 'w-56'; // Уже для 6-7 колонок
+    } else {
+        columnWidth = 'w-48'; // Очень узкие для 8+ колонок
+    }
+
     // Создаем HTML для колонок на основе статусов лидов
     const columnsHTML = leadStatuses.map(status => {
         const colorClass = getStatusColorClass(status.color);
@@ -71,10 +85,10 @@ function createDynamicKanbanStructure() {
         const textColorClass = getStatusTextColorClass(status.color);
         
         return `
-            <div class="${bgColorClass} p-4 rounded-lg w-80 flex-shrink-0" ondrop="drop(event, '${status.id}')" ondragover="allowDrop(event)">
-                <h3 class="font-semibold ${textColorClass} mb-2">${status.name}</h3>
-                <div class="text-2xl font-bold ${textColorClass} mb-2" id="${status.id}-leads-count">0</div>
-                <div id="${status.id}-leads-column" class="space-y-2 min-h-[200px]">
+            <div class="${bgColorClass} p-3 rounded-lg ${columnWidth} flex-shrink-0 kanban-column" ondrop="drop(event, '${status.id}')" ondragover="allowDrop(event)">
+                <h3 class="font-semibold ${textColorClass} mb-2 text-sm">${status.name}</h3>
+                <div class="text-xl font-bold ${textColorClass} mb-2" id="${status.id}-leads-count">0</div>
+                <div id="${status.id}-leads-column" class="space-y-2 min-h-[150px]">
                     <!-- Lead cards will be populated here -->
                 </div>
             </div>
@@ -94,16 +108,14 @@ function createLeadCard(lead) {
     const leadPrice = lead.calculation ? lead.calculation.total || 0 : 0;
 
     const cardHTML = `
-        <div class="kanban-card bg-white border border-gray-200 rounded-lg p-3 shadow-sm mb-2" draggable="true" ondragstart="dragStart(event, ${lead.id})" onclick="openLeadDetails(${lead.id})">
-            <div class="flex items-start justify-between mb-2">
-                <div class="font-medium text-sm text-gray-900 dark:text-white truncate">${leadName}</div>
-            </div>
+        <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2 shadow-sm mb-2" draggable="true" ondragstart="dragStart(event, ${lead.id})" onclick="openLeadDetails(${lead.id})">
+            <div class="font-medium text-xs text-gray-900 dark:text-white truncate mb-1">${leadName}</div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">${leadContact}</div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">${leadSource}</div>
             <div class="flex items-center justify-between">
                 <span class="text-xs font-medium text-gray-900 dark:text-white">${formatCurrency(leadPrice)}</span>
                 <div class="flex space-x-1">
-                    <button onclick="event.stopPropagation(); addReminderForLead(${lead.id})" class="text-gray-400 hover:text-yellow-500" title="Добавить напоминание">
+                    <button onclick="event.stopPropagation(); addReminderForLead(${lead.id})" class="text-gray-400 hover:text-yellow-500" title="Напоминание">
                         <i data-lucide="bell-plus" class="h-3 w-3"></i>
                     </button>
                     <button onclick="event.stopPropagation(); openLeadCalculator(${lead.id})" class="text-gray-400 hover:text-blue-500" title="Калькулятор">
