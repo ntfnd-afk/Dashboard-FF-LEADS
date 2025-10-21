@@ -16,10 +16,14 @@ function updateKanbanBoard() {
     }
 
     console.log('Updating Kanban board with leads:', leads);
-    console.log('Pipeline stages:', pipelineStages);
+    console.log('Lead statuses:', leadStatuses);
 
-    const stageIds = pipelineStages.map(stage => stage.id);
-    console.log('Pipeline stage IDs:', stageIds);
+    // Создаем динамическую структуру канбана на основе статусов лидов
+    createDynamicKanbanStructure();
+
+    // Используем статусы лидов вместо отдельных этапов воронки
+    const stageIds = leadStatuses.map(status => status.id);
+    console.log('Lead status IDs:', stageIds);
 
     // Обновляем каждую колонку
     stageIds.forEach(stageId => {
@@ -44,19 +48,41 @@ function updateKanbanBoard() {
         console.log('After setting innerHTML, column content:', columnElement.innerHTML);
         console.log('Column element children count:', columnElement.children.length);
 
-        // Проверяем computed styles
-        const computedStyle = window.getComputedStyle(columnElement);
-        console.log('Column element computed style:', {
-            display: computedStyle.display,
-            visibility: computedStyle.visibility,
-            height: computedStyle.height,
-            width: computedStyle.width,
-            opacity: computedStyle.opacity
-        });
+        // Обновляем счетчик лидов
+        const countElement = document.getElementById(`${stageId}-leads-count`);
+        if (countElement) {
+            countElement.textContent = stageLeads.length;
+        }
     });
 
     // Обновляем иконки Lucide
     lucide.createIcons();
+}
+
+// Создание динамической структуры канбана на основе статусов лидов
+function createDynamicKanbanStructure() {
+    const pipelineContainer = document.querySelector('#kanban-content .grid');
+    if (!pipelineContainer) return;
+
+    // Создаем HTML для колонок на основе статусов лидов
+    const columnsHTML = leadStatuses.map(status => {
+        const colorClass = getStatusColorClass(status.color);
+        const bgColorClass = getStatusBgColorClass(status.color);
+        const textColorClass = getStatusTextColorClass(status.color);
+        
+        return `
+            <div class="${bgColorClass} p-4 rounded-lg" ondrop="drop(event, '${status.id}')" ondragover="allowDrop(event)">
+                <h3 class="font-semibold ${textColorClass} mb-2">${status.name}</h3>
+                <div class="text-2xl font-bold ${textColorClass} mb-2" id="${status.id}-leads-count">0</div>
+                <div id="${status.id}-leads-column" class="space-y-2 min-h-[200px]">
+                    <!-- Lead cards will be populated here -->
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Обновляем контейнер
+    pipelineContainer.innerHTML = columnsHTML;
 }
 
 function createLeadCard(lead) {
@@ -306,6 +332,32 @@ function getStatusColorClass(color) {
     };
     
     return colorMap[color] || 'bg-gray-500';
+}
+
+function getStatusBgColorClass(color) {
+    const colorMap = {
+        blue: 'bg-blue-50 dark:bg-blue-900',
+        yellow: 'bg-yellow-50 dark:bg-yellow-900',
+        purple: 'bg-purple-50 dark:bg-purple-900',
+        orange: 'bg-orange-50 dark:bg-orange-900',
+        green: 'bg-green-50 dark:bg-green-900',
+        red: 'bg-red-50 dark:bg-red-900',
+        gray: 'bg-gray-50 dark:bg-gray-900'
+    };
+    return colorMap[color] || 'bg-gray-50 dark:bg-gray-900';
+}
+
+function getStatusTextColorClass(color) {
+    const colorMap = {
+        blue: 'text-blue-900 dark:text-blue-100',
+        yellow: 'text-yellow-900 dark:text-yellow-100',
+        purple: 'text-purple-900 dark:text-purple-100',
+        orange: 'text-orange-900 dark:text-orange-100',
+        green: 'text-green-900 dark:text-green-100',
+        red: 'text-red-900 dark:text-red-100',
+        gray: 'text-gray-900 dark:text-gray-100'
+    };
+    return colorMap[color] || 'text-gray-900 dark:text-gray-100';
 }
 
 // ========================================

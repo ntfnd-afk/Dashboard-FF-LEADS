@@ -65,16 +65,6 @@ var leadSources = [
     { id: 'other', name: 'Другое' }
 ];
 
-var pipelineStages = [
-    { id: 'new', name: 'Новые лиды', color: 'blue', order: 1 },
-    { id: 'contacted', name: 'Связались', color: 'yellow', order: 2 },
-    { id: 'quoted', name: 'Отправили смету', color: 'purple', order: 3 },
-    { id: 'negotiating', name: 'Переговоры', color: 'orange', order: 4 },
-    { id: 'won', name: 'Закрыт успешно', color: 'green', order: 5 },
-    { id: 'lost', name: 'Закрыт неуспешно', color: 'red', order: 6 }
-];
-
-// Услуги фулфилмента
 var services = [
     { id: 1, name: 'Упаковка', price: 50, unit: 'шт' },
     { id: 2, name: 'Хранение', price: 10, unit: 'день' },
@@ -218,7 +208,6 @@ function loadFromLocalStorage() {
     const savedSettings = localStorage.getItem('ff-global-telegram-settings');
     const savedLeadStatuses = localStorage.getItem('ff-lead-statuses');
     const savedLeadSources = localStorage.getItem('ff-lead-sources');
-    const savedPipelineStages = localStorage.getItem('ff-pipeline-stages');
     const savedServices = localStorage.getItem('ff-services');
 
     if (savedPriceDatabase) {
@@ -248,9 +237,6 @@ function loadFromLocalStorage() {
     }
     if (savedLeadSources) {
         leadSources = JSON.parse(savedLeadSources);
-    }
-    if (savedPipelineStages) {
-        pipelineStages = JSON.parse(savedPipelineStages);
     }
     if (savedServices) {
         services = JSON.parse(savedServices);
@@ -328,13 +314,6 @@ async function loadData() {
                         if (leadSourcesSetting) {
                             leadSources = JSON.parse(leadSourcesSetting.value);
                             localStorage.setItem('ff-lead-sources', JSON.stringify(leadSources));
-                        }
-                        
-                        // Загружаем этапы воронки
-                        const pipelineStagesSetting = settings.find(s => s.key === 'pipeline_stages');
-                        if (pipelineStagesSetting) {
-                            pipelineStages = JSON.parse(pipelineStagesSetting.value);
-                            localStorage.setItem('ff-pipeline-stages', JSON.stringify(pipelineStages));
                         }
                         
                         // Загружаем услуги фулфилмента
@@ -512,7 +491,6 @@ window.FFApp = {
     isOnline,
     leadStatuses,
     leadSources,
-    pipelineStages,
     services,
     importServicesData,
     

@@ -426,62 +426,12 @@
                                 <i data-lucide="bell-plus" class="h-4 w-4 mr-2"></i>
                                 Добавить напоминание
                             </button>
-                            <button onclick="showPipelineSettings()" class="flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
-                                <i data-lucide="settings" class="h-4 w-4 mr-2"></i>
-                                Настройки воронки
-                            </button>
                         </div>
                     </div>
                     
                     <!-- Pipeline Stages -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-                        <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg" ondrop="drop(event, 'new')" ondragover="allowDrop(event)">
-                            <h3 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">Новые лиды</h3>
-                            <div class="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-2" id="new-leads-count">0</div>
-                            <div id="new-leads-column" class="space-y-2 min-h-[200px]">
-                                <!-- Lead cards will be populated here -->
-                            </div>
-                        </div>
-                        
-                        <div class="bg-yellow-50 dark:bg-yellow-900 p-4 rounded-lg" ondrop="drop(event, 'contacted')" ondragover="allowDrop(event)">
-                            <h3 class="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">Связались</h3>
-                            <div class="text-2xl font-bold text-yellow-900 dark:text-yellow-100 mb-2" id="contacted-leads-count">0</div>
-                            <div id="contacted-leads-column" class="space-y-2 min-h-[200px]">
-                                <!-- Lead cards will be populated here -->
-                            </div>
-                        </div>
-                        
-                        <div class="bg-purple-50 dark:bg-purple-900 p-4 rounded-lg" ondrop="drop(event, 'quoted')" ondragover="allowDrop(event)">
-                            <h3 class="font-semibold text-purple-900 dark:text-purple-100 mb-2">Отправили смету</h3>
-                            <div class="text-2xl font-bold text-purple-900 dark:text-purple-100 mb-2" id="quoted-leads-count">0</div>
-                            <div id="quoted-leads-column" class="space-y-2 min-h-[200px]">
-                                <!-- Lead cards will be populated here -->
-                            </div>
-                        </div>
-                        
-                        <div class="bg-orange-50 dark:bg-orange-900 p-4 rounded-lg" ondrop="drop(event, 'negotiating')" ondragover="allowDrop(event)">
-                            <h3 class="font-semibold text-orange-900 dark:text-orange-100 mb-2">Переговоры</h3>
-                            <div class="text-2xl font-bold text-orange-900 dark:text-orange-100 mb-2" id="negotiating-leads-count">0</div>
-                            <div id="negotiating-leads-column" class="space-y-2 min-h-[200px]">
-                                <!-- Lead cards will be populated here -->
-                            </div>
-                        </div>
-                        
-                        <div class="bg-green-50 dark:bg-green-900 p-4 rounded-lg" ondrop="drop(event, 'won')" ondragover="allowDrop(event)">
-                            <h3 class="font-semibold text-green-900 dark:text-green-100 mb-2">Закрыт успешно</h3>
-                            <div class="text-2xl font-bold text-green-900 dark:text-green-100 mb-2" id="won-leads-count">0</div>
-                            <div id="won-leads-column" class="space-y-2 min-h-[200px]">
-                                <!-- Lead cards will be populated here -->
-                            </div>
-                        </div>
-                        
-                        <div class="bg-red-50 dark:bg-red-900 p-4 rounded-lg" ondrop="drop(event, 'lost')" ondragover="allowDrop(event)">
-                            <h3 class="font-semibold text-red-900 dark:text-red-100 mb-2">Закрыт неуспешно</h3>
-                            <div class="text-2xl font-bold text-red-900 dark:text-red-100 mb-2" id="lost-leads-count">0</div>
-                            <div id="lost-leads-column" class="space-y-2 min-h-[200px]">
-                                <!-- Lead cards will be populated here -->
-                            </div>
-                        </div>
+                        <!-- Колонки канбана будут созданы динамически на основе статусов лидов -->
                     </div>
                     
                     <!-- Reminders Section -->
@@ -680,55 +630,6 @@
         </div>
     </div>
 
-    <!-- Pipeline Settings Modal -->
-    <div id="pipelineSettingsModal" class="modal-overlay hidden">
-        <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                    Настройки воронки продаж
-                </h3>
-                <button onclick="hidePipelineSettings()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <i data-lucide="x" class="h-6 w-6"></i>
-                </button>
-            </div>
-            
-            <div class="p-6">
-                <div class="mb-6">
-                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Текущие этапы воронки</h4>
-                    <div id="pipelineList" class="space-y-2">
-                        <!-- Pipeline stages will be populated by JavaScript -->
-                    </div>
-                </div>
-                
-                <div class="border-t border-gray-200 dark:border-gray-600 pt-6">
-                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Добавить новый этап</h4>
-                    <div class="flex space-x-2">
-                        <input type="text" id="newPipelineName" placeholder="Название этапа" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-                        <select id="newPipelineColor" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-                            <option value="blue">Синий</option>
-                            <option value="yellow">Желтый</option>
-                            <option value="purple">Фиолетовый</option>
-                            <option value="orange">Оранжевый</option>
-                            <option value="green">Зеленый</option>
-                            <option value="red">Красный</option>
-                        </select>
-                        <button onclick="addNewPipelineStage()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-                            Добавить
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-4">
-                <button onclick="hidePipelineSettings()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
-                    Отмена
-                </button>
-                <button onclick="savePipelineSettings()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                    Сохранить
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- Notification Settings Modal -->
     <div id="notificationSettingsModal" class="modal-overlay hidden">
@@ -1008,33 +909,6 @@
                     </div>
                 </div>
 
-                <!-- Этапы воронки -->
-                <div class="mb-6">
-                    <button onclick="toggleAccordion('pipelineAccordion')" class="w-full flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                        <h4 class="text-md font-medium text-gray-900 dark:text-white">Этапы воронки (Канбан)</h4>
-                        <i id="pipelineAccordionIcon" data-lucide="chevron-down" class="h-5 w-5 text-gray-500 dark:text-gray-400"></i>
-                    </button>
-                    <div id="pipelineAccordion" class="hidden mt-2 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                        <div id="pipelineList" class="space-y-2">
-                            <!-- Этапы будут загружены динамически -->
-                        </div>
-                        <div class="mt-4 flex space-x-2">
-                            <input type="text" id="newPipelineName" placeholder="Новый этап" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
-                            <select id="newPipelineColor" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
-                                <option value="blue">Синий</option>
-                                <option value="yellow">Желтый</option>
-                                <option value="purple">Фиолетовый</option>
-                                <option value="orange">Оранжевый</option>
-                                <option value="green">Зеленый</option>
-                                <option value="red">Красный</option>
-                                <option value="gray">Серый</option>
-                            </select>
-                            <button onclick="addNewPipelineStage()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-                                Добавить
-                            </button>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Услуги фулфилмента -->
                 <div class="mb-6">

@@ -105,6 +105,8 @@ function addNewStatus() {
 
     leadStatuses.push(newStatus);
     updateStatusList();
+    updateKanbanBoard();
+    updateDashboard();
 
     // Очищаем поля
     document.getElementById('newStatusName').value = '';
@@ -247,102 +249,6 @@ function deleteSource(sourceId) {
 }
 
 // ========================================
-// PIPELINE MANAGEMENT FUNCTIONS
-// ========================================
-
-function updatePipelineList() {
-    const pipelineList = document.getElementById('pipelineList');
-    if (!pipelineList) return;
-
-    pipelineList.innerHTML = pipelineStages.map(stage => `
-        <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-500">
-            <div class="flex items-center space-x-3">
-                <div class="w-4 h-4 rounded-full ${getStatusColorClass(stage.color)}"></div>
-                <span class="text-sm font-medium text-gray-900 dark:text-white">${stage.name}</span>
-            </div>
-            <div class="flex space-x-2">
-                <button onclick="editPipelineStage('${stage.id}')" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="Редактировать">
-                    <i data-lucide="edit" class="h-4 w-4"></i>
-                </button>
-                <button onclick="removePipelineStage('${stage.id}')" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Удалить">
-                    <i data-lucide="trash-2" class="h-4 w-4"></i>
-                </button>
-            </div>
-        </div>
-    `).join('');
-
-    lucide.createIcons();
-}
-
-function addNewPipelineStage() {
-    const name = document.getElementById('newPipelineName').value.trim();
-    const color = document.getElementById('newPipelineColor').value;
-
-    if (!name) {
-        showNotification('Введите название этапа', 'error');
-        return;
-    }
-
-    const newStage = {
-        id: name.toLowerCase().replace(/\s+/g, '_'),
-        name: name,
-        color: color
-    };
-
-    pipelineStages.push(newStage);
-    updatePipelineList();
-    updateKanbanBoard();
-
-    // Очищаем поля
-    document.getElementById('newPipelineName').value = '';
-    document.getElementById('newPipelineColor').value = 'blue';
-
-    showNotification('Этап воронки добавлен', 'success');
-}
-
-function editPipelineStage(stageId) {
-    const stage = pipelineStages.find(s => s.id === stageId);
-    if (!stage) return;
-
-    const newName = prompt('Название этапа:', stage.name);
-    if (newName === null) return;
-
-    const newColor = prompt('Цвет (blue, yellow, purple, orange, green, red):', stage.color);
-    if (newColor === null) return;
-
-    if (!newName.trim()) {
-        showNotification('Название не может быть пустым', 'error');
-        return;
-    }
-
-    stage.name = newName.trim();
-    stage.color = newColor.trim();
-
-    updatePipelineList();
-    updateKanbanBoard();
-    showNotification('Этап воронки обновлен', 'success');
-}
-
-function removePipelineStage(stageId) {
-    if (!confirm('Вы уверены, что хотите удалить этот этап? Лиды с этим статусом будут перемещены в "Новый".')) return;
-
-    // Перемещаем лиды с удаляемого этапа в "Новый"
-    leads.forEach(lead => {
-        if (lead.status === stageId) {
-            lead.status = 'new';
-        }
-    });
-
-    pipelineStages = pipelineStages.filter(s => s.id !== stageId);
-    updatePipelineList();
-    updateKanbanBoard();
-    updateLeadsTable();
-    updateDashboard();
-
-    showNotification('Этап воронки удален', 'success');
-}
-
-// ========================================
 // SAVE ADMIN SETTINGS
 // ========================================
 
@@ -376,24 +282,11 @@ async function saveAdminSettings() {
                 throw new Error('Ошибка сохранения источников');
             }
             
-            const response3 = await fetch(`${API_BASE_URL}/settings`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    key: 'pipeline_stages',
-                    value: JSON.stringify(pipelineStages)
-                })
-            });
-            
-            if (!response3.ok) {
-                throw new Error('Ошибка сохранения этапов воронки');
-            }
         }
         
         // Сохраняем в localStorage
         localStorage.setItem('ff-lead-statuses', JSON.stringify(leadStatuses));
         localStorage.setItem('ff-lead-sources', JSON.stringify(leadSources));
-        localStorage.setItem('ff-pipeline-stages', JSON.stringify(pipelineStages));
         
         hideAdminSettings();
         showNotification('Настройки системы сохранены', 'success');
@@ -446,10 +339,6 @@ window.FFAdmin = {
     addNewSource,
     editSource,
     deleteSource,
-    updatePipelineList,
-    addNewPipelineStage,
-    editPipelineStage,
-    removePipelineStage,
     saveAdminSettings,
     getStatusColorClass
 };
