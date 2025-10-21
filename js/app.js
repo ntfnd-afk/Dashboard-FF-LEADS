@@ -688,6 +688,54 @@ window.showNotification = showNotification;
 window.formatDate = formatDate;
 window.formatCurrency = formatCurrency;
 
+// ========================================
+// MODAL BACKDROP CLICK HANDLER
+// ========================================
+
+// Универсальная функция для обработки кликов на backdrop модальных окон
+function handleModalBackdropClick(event, modalId, closeFunction) {
+    // Проверяем что клик был именно на backdrop (не на содержимое модального окна)
+    if (event.target === event.currentTarget) {
+        if (typeof closeFunction === 'function') {
+            closeFunction();
+        } else {
+            // Если функция закрытия не передана, пытаемся найти стандартную функцию
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+    }
+}
+
+// Добавляем обработчики кликов для всех модальных окон
+document.addEventListener('DOMContentLoaded', function() {
+    // Список модальных окон и их функций закрытия
+    const modals = [
+        { id: 'addLeadModal', closeFunction: 'hideAddLeadModal' },
+        { id: 'addReminderModal', closeFunction: 'hideAddReminderModal' },
+        { id: 'notificationSettingsModal', closeFunction: 'hideNotificationSettings' },
+        { id: 'userRegistrationModal', closeFunction: 'hideUserRegistrationModal' },
+        { id: 'loginModal', closeFunction: 'hideLoginModal' },
+        { id: 'convertLeadModal', closeFunction: 'hideConvertLeadModal' },
+        { id: 'leadDetailsModal', closeFunction: 'hideLeadDetails' },
+        { id: 'adminSettingsModal', closeFunction: 'hideAdminSettings' },
+        { id: 'clientDetailsModal', closeFunction: 'hideClientDetails' },
+        { id: 'calculatorModal', closeFunction: 'hideCalculatorModal' },
+        { id: 'importServicesModal', closeFunction: 'hideImportServicesModal' }
+    ];
+
+    modals.forEach(modal => {
+        const modalElement = document.getElementById(modal.id);
+        if (modalElement) {
+            modalElement.addEventListener('click', function(event) {
+                handleModalBackdropClick(event, modal.id, window[modal.closeFunction]);
+            });
+        }
+    });
+});
+
 // Make data available globally
 window.leads = leads;
 window.leadStatuses = leadStatuses;

@@ -61,22 +61,15 @@ function updateKanbanBoard() {
 
 // Создание динамической структуры канбана на основе статусов лидов
 function createDynamicKanbanStructure() {
-    const pipelineContainer = document.querySelector('#kanban-content .flex');
+    const pipelineContainer = document.getElementById('kanban-columns-container');
     if (!pipelineContainer) return;
 
-    // Рассчитываем оптимальную ширину колонок
+    // Рассчитываем количество колонок и создаем grid-template-columns
     const statusCount = leadStatuses.length;
-    let columnWidth = 'w-64'; // По умолчанию 256px
+    const gridColumns = `repeat(${statusCount}, 1fr)`;
     
-    if (statusCount <= 3) {
-        columnWidth = 'w-80'; // Больше места для 3 колонок
-    } else if (statusCount <= 5) {
-        columnWidth = 'w-64'; // Стандартная ширина для 4-5 колонок
-    } else if (statusCount <= 7) {
-        columnWidth = 'w-56'; // Уже для 6-7 колонок
-    } else {
-        columnWidth = 'w-48'; // Очень узкие для 8+ колонок
-    }
+    // Устанавливаем grid-template-columns для равномерного распределения
+    pipelineContainer.style.gridTemplateColumns = gridColumns;
 
     // Создаем HTML для колонок на основе статусов лидов
     const columnsHTML = leadStatuses.map(status => {
@@ -85,10 +78,10 @@ function createDynamicKanbanStructure() {
         const textColorClass = getStatusTextColorClass(status.color);
         
         return `
-            <div class="${bgColorClass} p-3 rounded-lg ${columnWidth} flex-shrink-0 kanban-column" ondrop="drop(event, '${status.id}')" ondragover="allowDrop(event)">
-                <h3 class="font-semibold ${textColorClass} mb-2 text-sm">${status.name}</h3>
+            <div class="${bgColorClass} p-3 rounded-lg kanban-column min-h-[200px]" ondrop="drop(event, '${status.id}')" ondragover="allowDrop(event)">
+                <h3 class="font-semibold ${textColorClass} mb-2 text-sm truncate">${status.name}</h3>
                 <div class="text-xl font-bold ${textColorClass} mb-2" id="${status.id}-leads-count">0</div>
-                <div id="${status.id}-leads-column" class="space-y-2 min-h-[150px]">
+                <div id="${status.id}-leads-column" class="space-y-2">
                     <!-- Lead cards will be populated here -->
                 </div>
             </div>
@@ -108,13 +101,13 @@ function createLeadCard(lead) {
     const leadPrice = lead.calculation ? lead.calculation.total || 0 : 0;
 
     const cardHTML = `
-        <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2 shadow-sm mb-2" draggable="true" ondragstart="dragStart(event, ${lead.id})" onclick="openLeadDetails(${lead.id})">
-            <div class="font-medium text-xs text-gray-900 dark:text-white truncate mb-1">${leadName}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">${leadContact}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">${leadSource}</div>
+        <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2 shadow-sm mb-2 w-full" draggable="true" ondragstart="dragStart(event, ${lead.id})" onclick="openLeadDetails(${lead.id})">
+            <div class="font-medium text-xs text-gray-900 dark:text-white truncate mb-1" title="${leadName}">${leadName}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 truncate mb-1" title="${leadContact}">${leadContact}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 truncate mb-2" title="${leadSource}">${leadSource}</div>
             <div class="flex items-center justify-between">
-                <span class="text-xs font-medium text-gray-900 dark:text-white">${formatCurrency(leadPrice)}</span>
-                <div class="flex space-x-1">
+                <span class="text-xs font-medium text-gray-900 dark:text-white truncate">${formatCurrency(leadPrice)}</span>
+                <div class="flex space-x-1 flex-shrink-0">
                     <button onclick="event.stopPropagation(); addReminderForLead(${lead.id})" class="text-gray-400 hover:text-yellow-500" title="Напоминание">
                         <i data-lucide="bell-plus" class="h-3 w-3"></i>
                     </button>

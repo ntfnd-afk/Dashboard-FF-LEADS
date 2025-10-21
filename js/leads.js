@@ -39,6 +39,24 @@ function clearFieldErrors() {
     });
 }
 
+function safeSetValue(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.value = value;
+    } else {
+        console.warn(`Element with id '${elementId}' not found`);
+    }
+}
+
+function safeSetChecked(elementId, checked) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.checked = checked;
+    } else {
+        console.warn(`Element with id '${elementId}' not found`);
+    }
+}
+
 // ========================================
 // LEAD MANAGEMENT FUNCTIONS
 // ========================================
@@ -62,13 +80,21 @@ function showAddLeadModal() {
 
 function hideAddLeadModal() {
     document.getElementById('addLeadModal').classList.add('hidden');
-    // Очищаем форму
-    document.getElementById('leadClientName').value = '';
-    document.getElementById('leadContact').value = '';
-    document.getElementById('leadSource').value = '';
-    document.getElementById('leadStatus').value = 'new';
-    document.getElementById('leadComments').value = '';
-    document.getElementById('createCalculation').checked = false;
+    
+    // Очищаем форму безопасно
+    safeSetValue('leadClientName', '');
+    safeSetValue('leadInn', '');
+    safeSetValue('leadKpp', '');
+    safeSetValue('leadContactPerson', '');
+    safeSetValue('leadPhone', '');
+    safeSetValue('leadEmail', '');
+    safeSetValue('leadSource', '');
+    safeSetValue('leadStatus', 'new');
+    safeSetValue('leadComments', '');
+    safeSetChecked('createCalculation', false);
+    
+    // Очищаем ошибки валидации
+    clearFieldErrors();
     
     // Очищаем атрибут редактирования
     document.getElementById('addLeadModal').removeAttribute('data-editing-id');
@@ -209,12 +235,16 @@ function editLead(leadId) {
     showAddLeadModal();
     
     // Fill form with lead data AFTER select options are updated
-    document.getElementById('leadClientName').value = lead.clientName || lead.name || '';
-    document.getElementById('leadContact').value = lead.contact || lead.phone || '';
-    document.getElementById('leadSource').value = lead.source || '';
-    document.getElementById('leadStatus').value = lead.status || 'new';
-    document.getElementById('leadComments').value = lead.comments || lead.notes || '';
-    document.getElementById('createCalculation').checked = false;
+    safeSetValue('leadClientName', lead.clientName || lead.name || '');
+    safeSetValue('leadInn', lead.inn || '');
+    safeSetValue('leadKpp', lead.kpp || '');
+    safeSetValue('leadContactPerson', lead.contactPerson || '');
+    safeSetValue('leadPhone', lead.contact || lead.phone || '');
+    safeSetValue('leadEmail', lead.email || '');
+    safeSetValue('leadSource', lead.source || '');
+    safeSetValue('leadStatus', lead.status || 'new');
+    safeSetValue('leadComments', lead.comments || lead.notes || '');
+    safeSetChecked('createCalculation', false);
 }
 
 async function deleteLead(leadId) {
