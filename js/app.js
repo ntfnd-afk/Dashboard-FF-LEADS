@@ -203,135 +203,143 @@ function showTab(tabName) {
 // DATA LOADING AND SAVING
 // ========================================
 
+function loadFromLocalStorage() {
+    console.log('📱 Загружаем данные из localStorage');
+    
+    const savedPriceDatabase = localStorage.getItem('ff-price-database');
+    const savedLeads = localStorage.getItem('ff-leads');
+    const savedReminders = localStorage.getItem('ff-reminders');
+    const savedUsers = localStorage.getItem('ff-users');
+    const savedSettings = localStorage.getItem('ff-global-telegram-settings');
+    const savedLeadStatuses = localStorage.getItem('ff-lead-statuses');
+    const savedLeadSources = localStorage.getItem('ff-lead-sources');
+    const savedPipelineStages = localStorage.getItem('ff-pipeline-stages');
+    const savedServices = localStorage.getItem('ff-services');
+
+    if (savedPriceDatabase) {
+        priceDatabase = JSON.parse(savedPriceDatabase);
+        updatePriceDatabaseTable();
+    }
+    if (savedLeads) {
+        leads = JSON.parse(savedLeads);
+    }
+    if (savedReminders) {
+        reminders = JSON.parse(savedReminders);
+        console.log('📱 Загружено напоминаний из localStorage:', reminders.length);
+    }
+    if (savedUsers) {
+        users = JSON.parse(savedUsers);
+        // Если есть пользователи, делаем первого текущим
+        if (users.length > 0 && !currentUser) {
+            currentUser = users[0];
+            updateCurrentUserDisplay();
+        }
+    }
+    if (savedSettings) {
+        globalTelegramSettings = JSON.parse(savedSettings);
+    }
+    if (savedLeadStatuses) {
+        leadStatuses = JSON.parse(savedLeadStatuses);
+    }
+    if (savedLeadSources) {
+        leadSources = JSON.parse(savedLeadSources);
+    }
+    if (savedPipelineStages) {
+        pipelineStages = JSON.parse(savedPipelineStages);
+    }
+    if (savedServices) {
+        services = JSON.parse(savedServices);
+    }
+
+    console.log('📱 Данные загружены из localStorage');
+}
+
 async function loadData() {
     try {
         if (isOnline) {
-            // Загружаем данные из API
-            const [leadsResponse, remindersResponse, pricesResponse, usersResponse, settingsResponse] = await Promise.all([
-                fetch(`${API_BASE_URL}/leads`),
-                fetch(`${API_BASE_URL}/reminders`),
-                fetch(`${API_BASE_URL}/prices`),
-                fetch(`${API_BASE_URL}/users`),
-                fetch(`${API_BASE_URL}/settings`)
-            ]);
+            try {
+                // Загружаем данные из API
+                const [leadsResponse, remindersResponse, pricesResponse, usersResponse, settingsResponse] = await Promise.all([
+                    fetch(`${API_BASE_URL}/leads`),
+                    fetch(`${API_BASE_URL}/reminders`),
+                    fetch(`${API_BASE_URL}/prices`),
+                    fetch(`${API_BASE_URL}/users`),
+                    fetch(`${API_BASE_URL}/settings`)
+                ]);
 
-            if (leadsResponse.ok) {
-                leads = await leadsResponse.json();
-                // Нормализуем поля лидов для совместимости
-                leads = leads.map(lead => ({
-                    ...lead,
-                    clientName: lead.client_name || lead.clientName || lead.name,
-                    contact: lead.phone || lead.contact,
-                    comments: lead.notes || lead.comments
-                }));
-                localStorage.setItem('ff-leads', JSON.stringify(leads));
-            }
-            if (remindersResponse.ok) {
-                reminders = await remindersResponse.json();
-                localStorage.setItem('ff-reminders', JSON.stringify(reminders));
-            }
-            if (pricesResponse.ok) {
-                priceDatabase = await pricesResponse.json();
-                localStorage.setItem('ff-price-database', JSON.stringify(priceDatabase));
-                updatePriceDatabaseTable();
-            }
-            if (usersResponse.ok) {
-                users = await usersResponse.json();
-                localStorage.setItem('ff-users', JSON.stringify(users));
-            }
-            if (settingsResponse.ok) {
-                const settings = await settingsResponse.json();
-                if (settings && settings.length > 0) {
-                    // Загружаем настройки Telegram
-                    const telegramSettings = settings.find(s => s.key === 'telegram_settings');
-                    if (telegramSettings) {
-                        globalTelegramSettings = JSON.parse(telegramSettings.value);
-                        localStorage.setItem('ff-global-telegram-settings', JSON.stringify(globalTelegramSettings));
-                    }
-                    
-                    // Загружаем статусы лидов
-                    const leadStatusesSetting = settings.find(s => s.key === 'lead_statuses');
-                    if (leadStatusesSetting) {
-                        leadStatuses = JSON.parse(leadStatusesSetting.value);
-                        localStorage.setItem('ff-lead-statuses', JSON.stringify(leadStatuses));
-                    }
-                    
-                    // Загружаем источники лидов
-                    const leadSourcesSetting = settings.find(s => s.key === 'lead_sources');
-                    if (leadSourcesSetting) {
-                        leadSources = JSON.parse(leadSourcesSetting.value);
-                        localStorage.setItem('ff-lead-sources', JSON.stringify(leadSources));
-                    }
-                    
-                    // Загружаем этапы воронки
-                    const pipelineStagesSetting = settings.find(s => s.key === 'pipeline_stages');
-                    if (pipelineStagesSetting) {
-                        pipelineStages = JSON.parse(pipelineStagesSetting.value);
-                        localStorage.setItem('ff-pipeline-stages', JSON.stringify(pipelineStages));
-                    }
-                    
-                    // Загружаем услуги фулфилмента
-                    const servicesSetting = settings.find(s => s.key === 'services');
-                    if (servicesSetting) {
-                        services = JSON.parse(servicesSetting.value);
-                        localStorage.setItem('ff-services', JSON.stringify(services));
+                if (leadsResponse.ok) {
+                    leads = await leadsResponse.json();
+                    // Нормализуем поля лидов для совместимости
+                    leads = leads.map(lead => ({
+                        ...lead,
+                        clientName: lead.client_name || lead.clientName || lead.name,
+                        contact: lead.phone || lead.contact,
+                        comments: lead.notes || lead.comments
+                    }));
+                    localStorage.setItem('ff-leads', JSON.stringify(leads));
+                }
+                if (remindersResponse.ok) {
+                    reminders = await remindersResponse.json();
+                    localStorage.setItem('ff-reminders', JSON.stringify(reminders));
+                }
+                if (pricesResponse.ok) {
+                    priceDatabase = await pricesResponse.json();
+                    localStorage.setItem('ff-price-database', JSON.stringify(priceDatabase));
+                    updatePriceDatabaseTable();
+                }
+                if (usersResponse.ok) {
+                    users = await usersResponse.json();
+                    localStorage.setItem('ff-users', JSON.stringify(users));
+                }
+                if (settingsResponse.ok) {
+                    const settings = await settingsResponse.json();
+                    if (settings && settings.length > 0) {
+                        // Загружаем настройки Telegram
+                        const telegramSettings = settings.find(s => s.key === 'telegram_settings');
+                        if (telegramSettings) {
+                            globalTelegramSettings = JSON.parse(telegramSettings.value);
+                            localStorage.setItem('ff-global-telegram-settings', JSON.stringify(globalTelegramSettings));
+                        }
+                        
+                        // Загружаем статусы лидов
+                        const leadStatusesSetting = settings.find(s => s.key === 'lead_statuses');
+                        if (leadStatusesSetting) {
+                            leadStatuses = JSON.parse(leadStatusesSetting.value);
+                            localStorage.setItem('ff-lead-statuses', JSON.stringify(leadStatuses));
+                        }
+                        
+                        // Загружаем источники лидов
+                        const leadSourcesSetting = settings.find(s => s.key === 'lead_sources');
+                        if (leadSourcesSetting) {
+                            leadSources = JSON.parse(leadSourcesSetting.value);
+                            localStorage.setItem('ff-lead-sources', JSON.stringify(leadSources));
+                        }
+                        
+                        // Загружаем этапы воронки
+                        const pipelineStagesSetting = settings.find(s => s.key === 'pipeline_stages');
+                        if (pipelineStagesSetting) {
+                            pipelineStages = JSON.parse(pipelineStagesSetting.value);
+                            localStorage.setItem('ff-pipeline-stages', JSON.stringify(pipelineStages));
+                        }
+                        
+                        // Загружаем услуги фулфилмента
+                        const servicesSetting = settings.find(s => s.key === 'services');
+                        if (servicesSetting) {
+                            services = JSON.parse(servicesSetting.value);
+                            localStorage.setItem('ff-services', JSON.stringify(services));
+                        }
                     }
                 }
-            }
 
-            console.log('✅ Данные загружены из БД');
-            
-            // Обновляем UI после загрузки данных
-            if (typeof updateGlobalRemindersList === 'function') {
-                updateGlobalRemindersList();
+                console.log('✅ Данные загружены из БД');
+            } catch (apiError) {
+                console.log('⚠️ API недоступен, загружаем из localStorage:', apiError);
+                // Если API недоступен, загружаем из localStorage
+                loadFromLocalStorage();
             }
         } else {
             // Загружаем из localStorage
-            const savedPriceDatabase = localStorage.getItem('ff-price-database');
-            const savedLeads = localStorage.getItem('ff-leads');
-            const savedReminders = localStorage.getItem('ff-reminders');
-            const savedUsers = localStorage.getItem('ff-users');
-            const savedSettings = localStorage.getItem('ff-global-telegram-settings');
-            const savedLeadStatuses = localStorage.getItem('ff-lead-statuses');
-            const savedLeadSources = localStorage.getItem('ff-lead-sources');
-            const savedPipelineStages = localStorage.getItem('ff-pipeline-stages');
-            const savedServices = localStorage.getItem('ff-services');
-
-            if (savedPriceDatabase) {
-                priceDatabase = JSON.parse(savedPriceDatabase);
-                updatePriceDatabaseTable();
-            }
-            if (savedLeads) {
-                leads = JSON.parse(savedLeads);
-            }
-            if (savedReminders) {
-                reminders = JSON.parse(savedReminders);
-            }
-            if (savedUsers) {
-                users = JSON.parse(savedUsers);
-                // Если есть пользователи, делаем первого текущим
-                if (users.length > 0 && !currentUser) {
-                    currentUser = users[0];
-                    updateCurrentUserDisplay();
-                }
-            }
-            if (savedSettings) {
-                globalTelegramSettings = JSON.parse(savedSettings);
-            }
-            if (savedLeadStatuses) {
-                leadStatuses = JSON.parse(savedLeadStatuses);
-            }
-            if (savedLeadSources) {
-                leadSources = JSON.parse(savedLeadSources);
-            }
-            if (savedPipelineStages) {
-                pipelineStages = JSON.parse(savedPipelineStages);
-            }
-            if (savedServices) {
-                services = JSON.parse(savedServices);
-            }
-
-            console.log('📱 Данные загружены из localStorage');
+            loadFromLocalStorage();
         }
 
         // Обновляем UI после загрузки данных
@@ -377,16 +385,7 @@ async function loadData() {
         showNotification('Ошибка загрузки данных. Работаем в офлайн режиме', 'warning');
         
         // Загружаем из localStorage в случае ошибки
-        const savedLeads = localStorage.getItem('ff-leads');
-        const savedReminders = localStorage.getItem('ff-reminders');
-        const savedPriceDatabase = localStorage.getItem('ff-price-database');
-        
-        if (savedLeads) leads = JSON.parse(savedLeads);
-        if (savedReminders) reminders = JSON.parse(savedReminders);
-        if (savedPriceDatabase) {
-            priceDatabase = JSON.parse(savedPriceDatabase);
-            updatePriceDatabaseTable();
-        }
+        loadFromLocalStorage();
     }
     
     // Обновляем UI после загрузки данных
