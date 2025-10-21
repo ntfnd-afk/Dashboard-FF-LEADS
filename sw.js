@@ -52,6 +52,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SCHEDULE_REMINDER') {
     scheduleBackgroundReminder(event.data.reminder);
+    return true; // Указываем что обработка асинхронная
   }
 });
 

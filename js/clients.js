@@ -422,8 +422,85 @@ function viewClientDetails(clientId) {
         return;
     }
     
-    // Здесь можно добавить детальное окно клиента
-    showNotification(`Просмотр клиента: ${client.clientName}`, 'info');
+    // Заполняем модальное окно данными клиента
+    populateClientDetails(client);
+    
+    // Показываем модальное окно
+    showClientDetailsModal();
+}
+
+// Функции для работы с модальным окном клиента
+function showClientDetailsModal() {
+    const modal = document.getElementById('clientDetailsModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function hideClientDetails() {
+    const modal = document.getElementById('clientDetailsModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+function populateClientDetails(client) {
+    // Заполняем заголовок
+    document.getElementById('clientDetailsTitle').textContent = `Детали клиента: ${client.clientName}`;
+    document.getElementById('clientDetailsSubtitle').textContent = `Клиент #${client.id.toString().padStart(4, '0')}`;
+    
+    // Заполняем основную информацию
+    document.getElementById('clientDetailsId').textContent = `#${client.id.toString().padStart(4, '0')}`;
+    document.getElementById('clientDetailsStatus').textContent = getClientStatusText(client.status);
+    document.getElementById('clientDetailsStatus').className = `inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getClientStatusColor(client.status)}`;
+    
+    // Заполняем информацию о клиенте
+    document.getElementById('clientDetailsCompany').textContent = client.clientName || 'Не указано';
+    document.getElementById('clientDetailsInn').textContent = client.inn || 'Не указано';
+    document.getElementById('clientDetailsKpp').textContent = client.kpp || 'Не указано';
+    document.getElementById('clientDetailsContact').textContent = client.contactPerson || 'Не указано';
+    document.getElementById('clientDetailsPhone').textContent = client.phone || 'Не указано';
+    document.getElementById('clientDetailsEmail').textContent = client.email || 'Не указано';
+    
+    // Заполняем бизнес информацию
+    document.getElementById('clientDetailsType').textContent = client.type || 'Обычный';
+    document.getElementById('clientDetailsManager').textContent = client.manager || 'Не назначен';
+    document.getElementById('clientDetailsStartDate').textContent = client.startDate ? new Date(client.startDate).toLocaleDateString('ru-RU') : 'Не указано';
+    document.getElementById('clientDetailsSource').textContent = client.source || 'Не указано';
+    
+    // Заполняем финансовую информацию
+    document.getElementById('clientDetailsRevenue').textContent = `${client.totalRevenue || 0} ₽`;
+    document.getElementById('clientDetailsOrders').textContent = client.ordersCount || 0;
+    
+    // Заполняем комментарии
+    document.getElementById('clientDetailsComments').textContent = client.comments || 'Комментарии отсутствуют';
+    
+    // Сохраняем текущего клиента для действий
+    window.currentClientDetails = client;
+}
+
+// Действия из модального окна клиента
+function editClientFromDetails() {
+    if (window.currentClientDetails) {
+        hideClientDetails();
+        editClient(window.currentClientDetails.id);
+    }
+}
+
+function createClientOrderFromDetails() {
+    if (window.currentClientDetails) {
+        hideClientDetails();
+        createClientOrder(window.currentClientDetails.id);
+    }
+}
+
+function deleteClientFromDetails() {
+    if (window.currentClientDetails) {
+        hideClientDetails();
+        deleteClient(window.currentClientDetails.id);
+    }
 }
 
 function editClient(clientId) {
@@ -558,6 +635,12 @@ window.FFClients = {
     filterClients,
     clearClientFilters,
     viewClientDetails,
+    showClientDetailsModal,
+    hideClientDetails,
+    populateClientDetails,
+    editClientFromDetails,
+    createClientOrderFromDetails,
+    deleteClientFromDetails,
     editClient,
     createClientOrder,
     deleteClient,
@@ -575,6 +658,12 @@ window.updateClientsTable = updateClientsTable;
 window.filterClients = filterClients;
 window.clearClientFilters = clearClientFilters;
 window.viewClientDetails = viewClientDetails;
+window.showClientDetailsModal = showClientDetailsModal;
+window.hideClientDetails = hideClientDetails;
+window.populateClientDetails = populateClientDetails;
+window.editClientFromDetails = editClientFromDetails;
+window.createClientOrderFromDetails = createClientOrderFromDetails;
+window.deleteClientFromDetails = deleteClientFromDetails;
 window.editClient = editClient;
 window.createClientOrder = createClientOrder;
 window.deleteClient = deleteClient;

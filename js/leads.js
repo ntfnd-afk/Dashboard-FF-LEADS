@@ -449,7 +449,7 @@ function updateLeadsTableWithData(leadsToShow) {
                     <button onclick="editLead(${lead.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300" title="Редактировать">
                         <i data-lucide="edit" class="h-4 w-4"></i>
                     </button>
-                    <button onclick="openLeadCalculator(${lead.id})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300" title="Калькулятор">
+                    <button onclick="openCalculatorForLead(${lead.id})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300" title="Калькулятор">
                         <i data-lucide="calculator" class="h-4 w-4"></i>
                     </button>
                     ${deleteButton}
