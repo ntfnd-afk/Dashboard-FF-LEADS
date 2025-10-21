@@ -38,14 +38,18 @@ function hideAddLeadModal() {
 
 async function addLead() {
     const clientName = document.getElementById('leadClientName').value.trim();
-    const contact = document.getElementById('leadContact').value.trim();
+    const inn = document.getElementById('leadInn').value.trim();
+    const kpp = document.getElementById('leadKpp').value.trim();
+    const contactPerson = document.getElementById('leadContactPerson').value.trim();
+    const phone = document.getElementById('leadPhone').value.trim();
+    const email = document.getElementById('leadEmail').value.trim();
     const source = document.getElementById('leadSource').value;
     const status = document.getElementById('leadStatus').value;
     const comments = document.getElementById('leadComments').value.trim();
     const createCalculation = document.getElementById('createCalculation').checked;
 
     if (!clientName) {
-        showNotification('Введите имя клиента', 'error');
+        showNotification('Введите название компании', 'error');
         return;
     }
 
@@ -216,6 +220,164 @@ function openLeadDetails(leadId) {
 }
 
 // ========================================
+// LEAD DETAILS FUNCTIONS
+// ========================================
+
+let currentLeadDetails = null;
+
+function viewLeadDetails(leadId) {
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead) {
+        showNotification('Лид не найден', 'error');
+        return;
+    }
+    
+    currentLeadDetails = lead;
+    populateLeadDetails(lead);
+    showLeadDetailsModal();
+}
+
+function showLeadDetailsModal() {
+    document.getElementById('leadDetailsModal').classList.remove('hidden');
+    
+    // Обновляем UI в зависимости от роли
+    updateLeadDetailsUI();
+    
+    // Инициализируем иконки
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
+
+function hideLeadDetails() {
+    document.getElementById('leadDetailsModal').classList.add('hidden');
+    currentLeadDetails = null;
+}
+
+function populateLeadDetails(lead) {
+    // Заголовок и подзаголовок
+    document.getElementById('leadDetailsTitle').textContent = lead.clientName || lead.name || 'Без названия';
+    document.getElementById('leadDetailsSubtitle').textContent = `Лид #${lead.id} - ${getStatusText(lead.status)}`;
+    
+    // Номер лида
+    document.getElementById('leadDetailsId').textContent = `#${lead.id.toString().padStart(4, '0')}`;
+    
+    // Статус
+    const statusElement = document.getElementById('leadDetailsStatus');
+    statusElement.textContent = getStatusText(lead.status);
+    statusElement.className = `inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(lead.status)}`;
+    
+    // Информация о клиенте
+    document.getElementById('leadDetailsCompany').textContent = lead.clientName || lead.name || 'Не указано';
+    document.getElementById('leadDetailsInn').textContent = lead.inn || 'Не указан';
+    document.getElementById('leadDetailsKpp').textContent = lead.kpp || 'Не указан';
+    document.getElementById('leadDetailsContact').textContent = lead.contactPerson || lead.contact || 'Не указано';
+    document.getElementById('leadDetailsPhone').textContent = lead.phone || lead.contact || 'Не указан';
+    document.getElementById('leadDetailsEmail').textContent = lead.email || 'Не указан';
+    
+    // Информация о лиде
+    const sourceElement = document.getElementById('leadDetailsSource');
+    sourceElement.textContent = getSourceText(lead.source);
+    sourceElement.className = `inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getSourceColor(lead.source)}`;
+    
+    document.getElementById('leadDetailsCreatedAt').textContent = formatDate(lead.createdAt || lead.created_at);
+    document.getElementById('leadDetailsUpdatedAt').textContent = formatDate(lead.updatedAt || lead.updated_at || lead.createdAt || lead.created_at);
+    document.getElementById('leadDetailsResponsible').textContent = currentUser?.full_name || 'Не назначен';
+    
+    // Комментарии
+    document.getElementById('leadDetailsComments').textContent = lead.comments || lead.notes || 'Комментарии отсутствуют';
+}
+
+function updateLeadDetailsUI() {
+    // Скрываем кнопку удаления для менеджеров
+    const deleteBtn = document.getElementById('deleteLeadFromDetailsBtn');
+    if (deleteBtn) {
+        if (hasPermission('delete_leads')) {
+            deleteBtn.style.display = 'inline-flex';
+        } else {
+            deleteBtn.style.display = 'none';
+        }
+    }
+}
+
+// Действия из детального окна
+function editLeadFromDetails() {
+    if (currentLeadDetails) {
+        hideLeadDetails();
+        editLead(currentLeadDetails.id);
+    }
+}
+
+function openLeadCalculatorFromDetails() {
+    if (currentLeadDetails) {
+        hideLeadDetails();
+        openLeadCalculator(currentLeadDetails.id);
+    }
+}
+
+function createReminderFromDetails() {
+    if (currentLeadDetails) {
+        hideLeadDetails();
+        // Открываем модальное окно создания напоминания с предзаполненным текстом
+        const reminderText = `Связаться с клиентом: ${currentLeadDetails.clientName || currentLeadDetails.name}`;
+        document.getElementById('reminderText').value = reminderText;
+        showAddReminderModal();
+    }
+}
+
+function changeStatusFromDetails() {
+    if (currentLeadDetails) {
+        // Показываем выбор статуса
+        const statusOptions = leadStatuses.map(status => 
+            `<option value="${status.id}" ${status.id === currentLeadDetails.status ? 'selected' : ''}>${status.name}</option>`
+        ).join('');
+        
+        const newStatus = prompt(`Выберите новый статус для лида #${currentLeadDetails.id}:\n\n${leadStatuses.map(s => `${s.id}. ${s.name}`).join('\n')}\n\nВведите номер статуса:`, currentLeadDetails.status);
+        
+        if (newStatus && newStatus !== currentLeadDetails.status) {
+            // Обновляем статус лида
+            const leadIndex = leads.findIndex(l => l.id === currentLeadDetails.id);
+            if (leadIndex !== -1) {
+                leads[leadIndex].status = newStatus;
+                leads[leadIndex].updatedAt = new Date().toISOString();
+                
+                // Сохраняем изменения
+                localStorage.setItem('ff-leads', JSON.stringify(leads));
+                
+                // Обновляем UI
+                updateLeadsTable();
+                updateKanbanBoard();
+                updateDashboard();
+                
+                // Обновляем детальное окно
+                currentLeadDetails.status = newStatus;
+                populateLeadDetails(currentLeadDetails);
+                
+                showNotification('Статус лида обновлен', 'success');
+            }
+        }
+    }
+}
+
+function convertLeadFromDetails() {
+    if (currentLeadDetails) {
+        hideLeadDetails();
+        
+        // Предзаполняем форму конвертации
+        const leadSelect = document.getElementById('leadToConvert');
+        if (leadSelect) {
+            leadSelect.value = currentLeadDetails.id;
+            // Обновляем превью
+            if (typeof updateConversionPreview === 'function') {
+                updateConversionPreview();
+            }
+        }
+        
+        showConvertLeadModal();
+    }
+}
+
+// ========================================
 // LEADS TABLE FUNCTIONS
 // ========================================
 
@@ -281,6 +443,9 @@ function updateLeadsTableWithData(leadsToShow) {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex space-x-2">
+                    <button onclick="viewLeadDetails(${lead.id})" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300" title="Просмотр деталей">
+                        <i data-lucide="eye" class="h-4 w-4"></i>
+                    </button>
                     <button onclick="editLead(${lead.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300" title="Редактировать">
                         <i data-lucide="edit" class="h-4 w-4"></i>
                     </button>
@@ -423,7 +588,18 @@ window.FFLeads = {
     getStatusText,
     getSourceText,
     getStatusColor,
-    updateSelectOptions
+    updateSelectOptions,
+    viewLeadDetails,
+    showLeadDetailsModal,
+    hideLeadDetails,
+    populateLeadDetails,
+    updateLeadDetailsUI,
+    editLeadFromDetails,
+    openLeadCalculatorFromDetails,
+    createReminderFromDetails,
+    changeStatusFromDetails,
+    deleteLeadFromDetails,
+    convertLeadFromDetails
 };
 
 // Make functions available globally for onclick attributes
@@ -442,3 +618,14 @@ window.getSourceText = getSourceText;
 window.getStatusColor = getStatusColor;
 window.updateSelectOptions = updateSelectOptions;
 window.clearFilters = clearFilters;
+
+// Lead Details functions
+window.viewLeadDetails = viewLeadDetails;
+window.showLeadDetailsModal = showLeadDetailsModal;
+window.hideLeadDetails = hideLeadDetails;
+window.editLeadFromDetails = editLeadFromDetails;
+window.openLeadCalculatorFromDetails = openLeadCalculatorFromDetails;
+window.createReminderFromDetails = createReminderFromDetails;
+window.changeStatusFromDetails = changeStatusFromDetails;
+window.deleteLeadFromDetails = deleteLeadFromDetails;
+window.convertLeadFromDetails = convertLeadFromDetails;

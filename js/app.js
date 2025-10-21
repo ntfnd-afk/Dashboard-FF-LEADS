@@ -293,6 +293,8 @@ function showTab(tabName) {
         if (typeof updateSelectOptions === 'function') {
             updateSelectOptions();
         }
+    } else if (tabName === 'clients') {
+        updateClientsTable();
     } else if (tabName === 'kanban') {
         updateKanbanBoard();
     }
@@ -487,6 +489,16 @@ async function loadData() {
         }
         if (savedMarkup) {
             document.getElementById('markup').value = savedMarkup;
+        }
+
+        // Загружаем клиентов
+        if (typeof loadClientsFromStorage === 'function') {
+            loadClientsFromStorage();
+        }
+        
+        // Загружаем клиентов из API (если доступен)
+        if (isOnline && typeof loadClientsFromAPI === 'function') {
+            await loadClientsFromAPI();
         }
 
         // Обновляем интерфейс

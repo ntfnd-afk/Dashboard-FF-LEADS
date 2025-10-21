@@ -159,6 +159,10 @@
                         <i data-lucide="users" class="h-5 w-5 mr-2"></i>
                         Лиды
                     </button>
+                    <button id="tab-clients" onclick="showTab('clients')" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                        <i data-lucide="user-check" class="h-5 w-5 mr-2"></i>
+                        Клиенты
+                    </button>
                     <button id="tab-calculator" onclick="showTab('calculator')" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
                         <i data-lucide="calculator" class="h-5 w-5 mr-2"></i>
                         Калькулятор
@@ -241,6 +245,103 @@
                         <div id="recentLeads" class="space-y-3">
                             <!-- Recent leads will be populated by JavaScript -->
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clients Tab Content -->
+            <div id="clients-content" class="tab-content hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Управление клиентами</h2>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                    Всего клиентов: <span id="totalClientsCount" class="font-semibold text-gray-900 dark:text-white">0</span>
+                                </div>
+                                <button onclick="showConvertLeadModal()" class="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                                    <i data-lucide="user-plus" class="h-4 w-4 mr-2"></i>
+                                    Конвертировать лид
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Статус клиента
+                                </label>
+                                <select id="clientStatusFilter" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                                    <option value="">Все статусы</option>
+                                    <option value="active">Активные</option>
+                                    <option value="inactive">Неактивные</option>
+                                    <option value="suspended">Приостановленные</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Источник
+                                </label>
+                                <select id="clientSourceFilter" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                                    <option value="">Все источники</option>
+                                    <!-- Опции будут загружены динамически -->
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Поиск
+                                </label>
+                                <div class="flex">
+                                    <input type="text" id="searchClients" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white" placeholder="Поиск по названию или контакту">
+                                    <button onclick="filterClients()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-r-lg transition-colors">
+                                        <i data-lucide="search" class="h-4 w-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-end">
+                                <button onclick="clearClientFilters()" class="w-full px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                                    <i data-lucide="x" class="h-4 w-4 mr-2 inline"></i>
+                                    Очистить фильтры
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clients Table -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        КЛИЕНТ
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        КОНТАКТ
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        СТАТУС
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        ДАТА КОНВЕРТАЦИИ
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        ОБОРОТ
+                                    </th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        ДЕЙСТВИЯ
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientsTableBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Clients will be populated by JavaScript -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -535,18 +636,47 @@
             
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Основная информация -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Имя клиента *
+                            Название компании *
                         </label>
-                        <input type="text" id="leadClientName" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="Введите имя клиента">
+                        <input type="text" id="leadClientName" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="ООО 'Название компании'">
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Контакт
+                            ИНН
                         </label>
-                        <input type="text" id="leadContact" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="Телефон или email">
+                        <input type="text" id="leadInn" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="1234567890" maxlength="12">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            КПП
+                        </label>
+                        <input type="text" id="leadKpp" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="123456789" maxlength="9">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Контактное лицо
+                        </label>
+                        <input type="text" id="leadContactPerson" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="Иван Иванов">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Телефон
+                        </label>
+                        <input type="tel" id="leadPhone" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="+7 (999) 123-45-67">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Email
+                        </label>
+                        <input type="email" id="leadEmail" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="ivan@example.com">
                     </div>
                     
                     <div>
@@ -859,6 +989,312 @@
         </div>
     </div>
 
+    <!-- Convert Lead to Client Modal -->
+    <div id="convertLeadModal" class="modal-overlay hidden">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full mx-4">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                        <i data-lucide="user-plus" class="h-5 w-5 text-green-600 dark:text-green-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Конвертировать лид в клиента
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Выберите лид для конвертации в клиента
+                        </p>
+                    </div>
+                </div>
+                <button onclick="hideConvertLeadModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i data-lucide="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <!-- Lead Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Выберите лид для конвертации *
+                    </label>
+                    <select id="leadToConvert" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                        <option value="">Выберите лид...</option>
+                        <!-- Опции будут загружены динамически -->
+                    </select>
+                </div>
+
+                <!-- Client Information -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <i data-lucide="user-check" class="h-5 w-5 mr-2 text-green-600"></i>
+                        Информация о клиенте
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Статус клиента
+                            </label>
+                            <select id="clientStatus" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                                <option value="active">Активный</option>
+                                <option value="inactive">Неактивный</option>
+                                <option value="suspended">Приостановленный</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Дата начала сотрудничества
+                            </label>
+                            <input type="date" id="clientStartDate" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Менеджер клиента
+                            </label>
+                            <select id="clientManager" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                                <!-- Опции будут загружены динамически -->
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Тип клиента
+                            </label>
+                            <select id="clientType" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                                <option value="regular">Обычный</option>
+                                <option value="vip">VIP</option>
+                                <option value="wholesale">Оптовый</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <i data-lucide="info" class="h-5 w-5 mr-2 text-blue-600"></i>
+                        Дополнительная информация
+                    </h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Комментарии к конвертации
+                            </label>
+                            <textarea id="conversionComments" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="Дополнительная информация о конвертации лида в клиента"></textarea>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" id="keepLeadHistory" class="mr-2" checked>
+                            <label class="text-sm text-gray-700 dark:text-gray-300">
+                                Сохранить историю лида (рекомендуется)
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" id="sendWelcomeEmail" class="mr-2">
+                            <label class="text-sm text-gray-700 dark:text-gray-300">
+                                Отправить приветственное письмо клиенту
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div id="conversionPreview" class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hidden">
+                    <h4 class="text-md font-semibold text-gray-900 dark:text-white mb-2">Предварительный просмотр:</h4>
+                    <div id="previewContent" class="text-sm text-gray-600 dark:text-gray-400">
+                        <!-- Preview content will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-4">
+                <button onclick="hideConvertLeadModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                    Отмена
+                </button>
+                <button onclick="convertLeadToClient()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                    <i data-lucide="user-plus" class="h-4 w-4 mr-2 inline"></i>
+                    Конвертировать в клиента
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lead Details Modal -->
+    <div id="leadDetailsModal" class="modal-overlay hidden">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                        <i data-lucide="user" class="h-5 w-5 text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="leadDetailsTitle">
+                            Детали лида
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400" id="leadDetailsSubtitle">
+                            Полная информация о клиенте
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="editLeadFromDetails()" class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">
+                        <i data-lucide="edit" class="h-4 w-4 mr-1 inline"></i>
+                        Редактировать
+                    </button>
+                    <button onclick="hideLeadDetails()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i data-lucide="x" class="h-6 w-6"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <!-- Lead ID and Status -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Номер лида</h4>
+                                <p class="text-2xl font-bold text-gray-900 dark:text-white" id="leadDetailsId">#0001</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                <i data-lucide="hash" class="h-6 w-6 text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Статус</h4>
+                                <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full" id="leadDetailsStatus">
+                                    Новый
+                                </span>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                                <i data-lucide="check-circle" class="h-6 w-6 text-green-600 dark:text-green-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Client Information -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <i data-lucide="user" class="h-5 w-5 mr-2 text-blue-600"></i>
+                        Информация о клиенте
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Название компании</label>
+                                <p class="text-lg font-semibold text-gray-900 dark:text-white" id="leadDetailsCompany">ООО "Пример"</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ИНН</label>
+                                <p class="text-gray-900 dark:text-white font-mono" id="leadDetailsInn">1234567890</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">КПП</label>
+                                <p class="text-gray-900 dark:text-white font-mono" id="leadDetailsKpp">123456789</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Контактное лицо</label>
+                                <p class="text-gray-900 dark:text-white" id="leadDetailsContact">Иван Иванов</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Телефон</label>
+                                <p class="text-gray-900 dark:text-white" id="leadDetailsPhone">+7 (999) 123-45-67</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                                <p class="text-gray-900 dark:text-white" id="leadDetailsEmail">ivan@example.com</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lead Information -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <i data-lucide="info" class="h-5 w-5 mr-2 text-green-600"></i>
+                        Информация о лиде
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Источник</label>
+                                <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" id="leadDetailsSource">
+                                    Сайт
+                                </span>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Дата создания</label>
+                                <p class="text-gray-900 dark:text-white" id="leadDetailsCreatedAt">21.10.2024</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Последнее обновление</label>
+                                <p class="text-gray-900 dark:text-white" id="leadDetailsUpdatedAt">21.10.2024</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ответственный</label>
+                                <p class="text-gray-900 dark:text-white" id="leadDetailsResponsible">Администратор</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <i data-lucide="message-square" class="h-5 w-5 mr-2 text-purple-600"></i>
+                        Комментарии и заметки
+                    </h4>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <p class="text-gray-900 dark:text-white" id="leadDetailsComments">
+                            Дополнительная информация о клиенте и его потребностях...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <i data-lucide="zap" class="h-5 w-5 mr-2 text-orange-600"></i>
+                        Действия
+                    </h4>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="openLeadCalculatorFromDetails()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center">
+                            <i data-lucide="calculator" class="h-4 w-4 mr-2"></i>
+                            Открыть калькулятор
+                        </button>
+                        <button onclick="createReminderFromDetails()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center">
+                            <i data-lucide="bell" class="h-4 w-4 mr-2"></i>
+                            Создать напоминание
+                        </button>
+                        <button onclick="changeStatusFromDetails()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center">
+                            <i data-lucide="arrow-right" class="h-4 w-4 mr-2"></i>
+                            Изменить статус
+                        </button>
+                        <button onclick="convertLeadFromDetails()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center">
+                            <i data-lucide="user-plus" class="h-4 w-4 mr-2"></i>
+                            Конвертировать в клиента
+                        </button>
+                        <button onclick="deleteLeadFromDetails()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center" id="deleteLeadFromDetailsBtn">
+                            <i data-lucide="trash-2" class="h-4 w-4 mr-2"></i>
+                            Удалить лид
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Admin Settings Modal -->
     <div id="adminSettingsModal" class="modal-overlay hidden">
         <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -1017,6 +1453,7 @@
     <script src="js/app.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/leads.js"></script>
+    <script src="js/clients.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/kanban.js"></script>
     <script src="js/calculator.js"></script>
