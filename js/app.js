@@ -75,6 +75,80 @@ var services = [
 var importServicesData = null; // Данные для импорта услуг
 
 // ========================================
+// ROLE-BASED ACCESS CONTROL
+// ========================================
+
+function hasPermission(action) {
+    if (!currentUser) return false;
+    
+    const permissions = {
+        'delete_leads': ['admin'],
+        'delete_statuses': ['admin'],
+        'delete_sources': ['admin'],
+        'delete_services': ['admin'],
+        'admin_settings': ['admin'],
+        'edit_leads': ['admin', 'manager'],
+        'view_leads': ['admin', 'manager'],
+        'add_leads': ['admin', 'manager'],
+        'manage_reminders': ['admin', 'manager']
+    };
+    
+    const allowedRoles = permissions[action] || [];
+    return allowedRoles.includes(currentUser.role);
+}
+
+function requirePermission(action, callback) {
+    if (hasPermission(action)) {
+        return callback();
+    } else {
+        showNotification('У вас нет прав для выполнения этого действия', 'error');
+        return false;
+    }
+}
+
+function updateUIForRole() {
+    // Скрываем/показываем элементы в зависимости от роли
+    const deleteButtons = document.querySelectorAll('[onclick*="deleteLead"]');
+    const adminButtons = document.querySelectorAll('[onclick*="deleteStatus"], [onclick*="deleteSource"]');
+    const adminSettingsBtn = document.getElementById('adminSettingsBtn');
+    
+    if (currentUser) {
+        // Управление кнопкой админ настроек (шестеренка)
+        if (adminSettingsBtn) {
+            if (hasPermission('admin_settings')) {
+                adminSettingsBtn.style.display = 'inline-block';
+                adminSettingsBtn.title = 'Настройки системы (только для администраторов)';
+            } else {
+                adminSettingsBtn.style.display = 'none';
+            }
+        }
+        
+        // Управление кнопками удаления лидов
+        deleteButtons.forEach(button => {
+            if (hasPermission('delete_leads')) {
+                button.style.display = 'inline-block';
+                button.title = 'Удалить лид';
+            } else {
+                button.style.display = 'none';
+            }
+        });
+        
+        // Управление админ кнопками
+        adminButtons.forEach(button => {
+            if (hasPermission('delete_statuses') || hasPermission('delete_sources')) {
+                button.style.display = 'inline-block';
+            } else {
+                button.style.display = 'none';
+            }
+        });
+        
+        console.log(`🔐 UI обновлен для роли: ${currentUser.role}`);
+        console.log(`⚙️ Кнопка настроек: ${hasPermission('admin_settings') ? 'видна' : 'скрыта'}`);
+        console.log(`🗑️ Кнопки удаления: ${hasPermission('delete_leads') ? 'видны' : 'скрыты'}`);
+    }
+}
+
+// ========================================
 // LOADING INDICATOR FUNCTIONS
 // ========================================
 
@@ -491,6 +565,12 @@ function initializeApp() {
         if (currentUser.role === 'admin') {
             document.getElementById('adminSettingsBtn').style.display = 'block';
         }
+        
+        // Обновляем UI в зависимости от роли
+        if (typeof updateUIForRole === 'function') {
+            updateUIForRole();
+        }
+        
         console.log('👤 Пользователь авторизован:', currentUser.username);
     } else {
         // Показываем модальное окно входа
@@ -576,7 +656,10 @@ window.FFApp = {
     saveData,
     initializeApp,
     showLoading,
-    hideLoading
+    hideLoading,
+    hasPermission,
+    requirePermission,
+    updateUIForRole
 };
 
 // Make functions available globally for onclick attributes
@@ -584,6 +667,9 @@ window.showTab = showTab;
 window.loadData = loadData;
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
+window.hasPermission = hasPermission;
+window.requirePermission = requirePermission;
+window.updateUIForRole = updateUIForRole;
 window.saveData = saveData;
 window.updateConnectionStatus = updateConnectionStatus;
 window.showNotification = showNotification;

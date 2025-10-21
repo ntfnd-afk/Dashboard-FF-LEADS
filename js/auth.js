@@ -95,6 +95,11 @@ async function loginUser() {
             if (currentUser.role === 'admin') {
                 document.getElementById('adminSettingsBtn').style.display = 'block';
             }
+            
+            // Обновляем UI в зависимости от роли
+            if (typeof updateUIForRole === 'function') {
+                updateUIForRole();
+            }
         } else {
             const error = await response.json();
             showLoginError(error.message || 'Неверный логин или пароль');

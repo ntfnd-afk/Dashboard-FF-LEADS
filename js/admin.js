@@ -7,6 +7,12 @@
 // ========================================
 
 function showAdminSettings() {
+    // Проверяем права доступа
+    if (!hasPermission('admin_settings')) {
+        showNotification('У вас нет прав для доступа к настройкам системы. Обратитесь к администратору.', 'error');
+        return;
+    }
+    
     document.getElementById('adminSettingsModal').classList.remove('hidden');
     loadAdminSettings();
 }
@@ -89,6 +95,12 @@ function updateStatusList() {
 }
 
 function addNewStatus() {
+    // Проверяем права доступа
+    if (!hasPermission('admin_settings')) {
+        showNotification('У вас нет прав для добавления статусов.', 'error');
+        return;
+    }
+    
     const name = document.getElementById('newStatusName').value.trim();
     const color = document.getElementById('newStatusColor').value;
 
@@ -116,6 +128,12 @@ function addNewStatus() {
 }
 
 function editStatus(statusId) {
+    // Проверяем права доступа
+    if (!hasPermission('admin_settings')) {
+        showNotification('У вас нет прав для редактирования статусов.', 'error');
+        return;
+    }
+    
     const status = leadStatuses.find(s => s.id === statusId);
     if (!status) return;
 
@@ -141,6 +159,12 @@ function editStatus(statusId) {
 }
 
 function deleteStatus(statusId) {
+    // Проверяем права доступа
+    if (!hasPermission('delete_statuses')) {
+        showNotification('У вас нет прав для удаления статусов.', 'error');
+        return;
+    }
+    
     if (!confirm('Вы уверены, что хотите удалить этот статус? Лиды с этим статусом будут перемещены в "Новый".')) return;
 
     // Перемещаем лиды с удаляемого статуса в "Новый"
@@ -187,6 +211,12 @@ function updateSourceList() {
 }
 
 function addNewSource() {
+    // Проверяем права доступа
+    if (!hasPermission('admin_settings')) {
+        showNotification('У вас нет прав для добавления источников.', 'error');
+        return;
+    }
+    
     const name = document.getElementById('newSourceName').value.trim();
 
     if (!name) {
@@ -209,6 +239,12 @@ function addNewSource() {
 }
 
 function editSource(sourceId) {
+    // Проверяем права доступа
+    if (!hasPermission('admin_settings')) {
+        showNotification('У вас нет прав для редактирования источников.', 'error');
+        return;
+    }
+    
     const source = leadSources.find(s => s.id === sourceId);
     if (!source) return;
 
@@ -230,6 +266,12 @@ function editSource(sourceId) {
 }
 
 function deleteSource(sourceId) {
+    // Проверяем права доступа
+    if (!hasPermission('delete_sources')) {
+        showNotification('У вас нет прав для удаления источников.', 'error');
+        return;
+    }
+    
     if (!confirm('Вы уверены, что хотите удалить этот источник? Лиды с этим источником будут перемещены в "Другое".')) return;
 
     // Перемещаем лиды с удаляемого источника в "Другое"
@@ -253,6 +295,12 @@ function deleteSource(sourceId) {
 // ========================================
 
 async function saveAdminSettings() {
+    // Проверяем права доступа
+    if (!hasPermission('admin_settings')) {
+        showNotification('У вас нет прав для сохранения настроек системы.', 'error');
+        return;
+    }
+    
     try {
         if (isOnline) {
             // Сохраняем настройки на сервере

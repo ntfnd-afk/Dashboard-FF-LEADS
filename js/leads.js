@@ -150,6 +150,12 @@ function editLead(leadId) {
 }
 
 async function deleteLead(leadId) {
+    // Проверяем права доступа
+    if (!hasPermission('delete_leads')) {
+        showNotification('У вас нет прав для удаления лидов. Обратитесь к администратору.', 'error');
+        return;
+    }
+    
     if (!confirm('Вы уверены, что хотите удалить этого лида?')) return;
 
     try {
@@ -247,7 +253,14 @@ function updateLeadsTableWithData(leadsToShow) {
         return;
     }
 
-    tbody.innerHTML = leadsToShow.map(lead => `
+    tbody.innerHTML = leadsToShow.map(lead => {
+        const canDelete = hasPermission('delete_leads');
+        const deleteButton = canDelete ? 
+            `<button onclick="deleteLead(${lead.id})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Удалить лид">
+                <i data-lucide="trash-2" class="h-4 w-4"></i>
+            </button>` : '';
+
+        return `
         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                 ${lead.clientName || lead.name || 'Без имени'}
@@ -274,13 +287,12 @@ function updateLeadsTableWithData(leadsToShow) {
                     <button onclick="openLeadCalculator(${lead.id})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300" title="Калькулятор">
                         <i data-lucide="calculator" class="h-4 w-4"></i>
                     </button>
-                    <button onclick="deleteLead(${lead.id})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Удалить">
-                        <i data-lucide="trash-2" class="h-4 w-4"></i>
-                    </button>
+                    ${deleteButton}
                 </div>
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 
     lucide.createIcons();
 }
