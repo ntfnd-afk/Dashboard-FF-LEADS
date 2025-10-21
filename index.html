@@ -1193,6 +1193,16 @@
                 document.getElementById('globalRemindersSidebar').classList.add('translate-x-full');
                 document.getElementById('globalRemindersToggle').style.display = 'block';
             };
+            
+            // Принудительно обновляем UI напоминаний после полной загрузки страницы
+            setTimeout(() => {
+                if (typeof updateGlobalRemindersList === 'function') {
+                    console.log('Принудительно обновляем UI напоминаний в конце загрузки страницы');
+                    updateGlobalRemindersList();
+                } else {
+                    console.log('Функция updateGlobalRemindersList не найдена в конце загрузки');
+                }
+            }, 1000);
         });
     </script>
 </body>

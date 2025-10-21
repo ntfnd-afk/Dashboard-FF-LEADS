@@ -335,9 +335,14 @@ async function loadData() {
         }
 
         // Обновляем UI после загрузки данных
-        if (typeof updateGlobalRemindersList === 'function') {
-            updateGlobalRemindersList();
-        }
+        setTimeout(() => {
+            if (typeof updateGlobalRemindersList === 'function') {
+                console.log('Обновляем UI напоминаний после загрузки данных');
+                updateGlobalRemindersList();
+            } else {
+                console.log('Функция updateGlobalRemindersList еще не загружена');
+            }
+        }, 100);
 
         // Загружаем локальные данные
         const savedCalculationItems = localStorage.getItem('ff-calculation-items');
@@ -452,6 +457,16 @@ function initializeApp() {
     if (currentDateElement) {
         currentDateElement.value = currentDate;
     }
+    
+    // Принудительно обновляем UI напоминаний после полной инициализации
+    setTimeout(() => {
+        if (typeof updateGlobalRemindersList === 'function') {
+            console.log('Принудительно обновляем UI напоминаний в initializeApp');
+            updateGlobalRemindersList();
+        } else {
+            console.log('Функция updateGlobalRemindersList все еще не загружена');
+        }
+    }, 500);
 }
 
 // ========================================
