@@ -280,6 +280,11 @@ async function loadData() {
             }
 
             console.log('✅ Данные загружены из БД');
+            
+            // Обновляем UI после загрузки данных
+            if (typeof updateGlobalRemindersList === 'function') {
+                updateGlobalRemindersList();
+            }
         } else {
             // Загружаем из localStorage
             const savedPriceDatabase = localStorage.getItem('ff-price-database');
@@ -329,6 +334,11 @@ async function loadData() {
             console.log('📱 Данные загружены из localStorage');
         }
 
+        // Обновляем UI после загрузки данных
+        if (typeof updateGlobalRemindersList === 'function') {
+            updateGlobalRemindersList();
+        }
+
         // Загружаем локальные данные
         const savedCalculationItems = localStorage.getItem('ff-calculation-items');
         const savedClientName = localStorage.getItem('ff-client-name');
@@ -372,6 +382,11 @@ async function loadData() {
             priceDatabase = JSON.parse(savedPriceDatabase);
             updatePriceDatabaseTable();
         }
+    }
+    
+    // Обновляем UI после загрузки данных
+    if (typeof updateGlobalRemindersList === 'function') {
+        updateGlobalRemindersList();
     }
 }
 
