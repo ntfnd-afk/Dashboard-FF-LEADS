@@ -28,7 +28,7 @@ var globalTelegramSettings = {
 };
 
 // API Configuration
-var API_BASE_URL = 'https://api.fulfilment-one.ru/api'; // Продакшн
+var API_BASE_URL = 'http://51.250.97.39:3001/api'; // Server notifications API
 // var API_BASE_URL = 'http://localhost:3000/api'; // Локальная разработка
 var isOnline = navigator.onLine;
 

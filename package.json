@@ -1,0 +1,19 @@
+{
+  "name": "ff-dashboard-notifications",
+  "version": "1.0.0",
+  "description": "Server-side notifications for FF Dashboard",
+  "main": "server-notifications.js",
+  "scripts": {
+    "start": "node server-notifications.js",
+    "dev": "nodemon server-notifications.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

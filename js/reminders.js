@@ -74,6 +74,11 @@ async function addReminder() {
         reminders.push(newReminder);
         localStorage.setItem('ff-reminders', JSON.stringify(reminders));
         console.log('Напоминание сохранено в localStorage, всего напоминаний:', reminders.length);
+        
+        // Также сохраняем в IndexedDB для Service Worker
+        saveReminderToIndexedDB(newReminder).catch(error => {
+            console.error('Ошибка сохранения напоминания в IndexedDB:', error);
+        });
 
         // Если API доступен, также сохраняем на сервере
         if (apiAvailable) {
@@ -81,7 +86,13 @@ async function addReminder() {
                 const response = await fetch(`${API_BASE_URL}/reminders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newReminder)
+                    body: JSON.stringify({
+                        text: reminderText,
+                        datetime: newReminder.datetime,
+                        lead_id: null, // Можно связать с лидом если нужно
+                        telegram_bot_token: TELEGRAM_CONFIG.botToken,
+                        telegram_chat_id: TELEGRAM_CONFIG.groupId
+                    })
                 });
 
                 if (response.ok) {
@@ -393,6 +404,81 @@ function debugReminders() {
 // Добавляем функцию в глобальную область
 window.debugReminders = debugReminders;
 
+// Сохранение настроек в IndexedDB для Service Worker
+function saveSettingsToIndexedDB(settings) {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('FFDashboard', 1);
+        
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            
+            // Создаем хранилище для настроек
+            if (!db.objectStoreNames.contains('settings')) {
+                db.createObjectStore('settings', { keyPath: 'key' });
+            }
+            
+            // Создаем хранилище для напоминаний
+            if (!db.objectStoreNames.contains('reminders')) {
+                const reminderStore = db.createObjectStore('reminders', { keyPath: 'id' });
+                reminderStore.createIndex('datetime', 'datetime', { unique: false });
+            }
+        };
+        
+        request.onsuccess = (event) => {
+            const db = event.target.result;
+            const transaction = db.transaction(['settings'], 'readwrite');
+            const store = transaction.objectStore('settings');
+            
+            store.put({ key: 'telegram_settings', ...settings });
+            
+            transaction.oncomplete = () => {
+                console.log('Настройки сохранены в IndexedDB');
+                resolve();
+            };
+            
+            transaction.onerror = () => {
+                console.error('Ошибка сохранения в IndexedDB');
+                reject(transaction.error);
+            };
+        };
+        
+        request.onerror = () => {
+            console.error('Ошибка открытия IndexedDB');
+            reject(request.error);
+        };
+    });
+}
+
+// Сохранение напоминания в IndexedDB для Service Worker
+function saveReminderToIndexedDB(reminder) {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('FFDashboard', 1);
+        
+        request.onsuccess = (event) => {
+            const db = event.target.result;
+            const transaction = db.transaction(['reminders'], 'readwrite');
+            const store = transaction.objectStore('reminders');
+            
+            store.put(reminder);
+            
+            transaction.oncomplete = () => {
+                console.log('Напоминание сохранено в IndexedDB');
+                resolve();
+            };
+            
+            transaction.onerror = () => {
+                console.error('Ошибка сохранения напоминания в IndexedDB');
+                reject(transaction.error);
+            };
+        };
+        
+        request.onerror = () => {
+            console.error('Ошибка открытия IndexedDB');
+            reject(request.error);
+        };
+    });
+}
+
 function scheduleReminderNotification(reminder) {
     // Используем локальное время для планирования
     const reminderTime = reminder.localDateTime ? new Date(reminder.localDateTime) : new Date(reminder.datetime);
@@ -404,10 +490,21 @@ function scheduleReminderNotification(reminder) {
     
     console.log(`Планируем уведомление на ${reminderTime.toLocaleString('ru-RU')} (через ${Math.round(timeUntilReminder / 1000 / 60)} минут)`);
     
+    // Планируем в основном потоке (для случая когда сайт открыт)
     setTimeout(() => {
         showBrowserNotification(reminder.text);
-        sendTelegramNotification(reminder.text);
+        sendTelegramNotification(reminder.text, true);
+        completeReminder(reminder.id);
     }, timeUntilReminder);
+    
+    // Также планируем в Service Worker для фоновой работы
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+            type: 'SCHEDULE_REMINDER',
+            reminder: reminder
+        });
+        console.log('Напоминание также запланировано в Service Worker для фоновой работы');
+    }
 }
 
 function showBrowserNotification(message) {
@@ -544,6 +641,7 @@ async function saveNotificationSettings() {
             }
         }
         
+        // Сохраняем в localStorage
         localStorage.setItem('ff-global-telegram-settings', JSON.stringify({
             botToken,
             chatType,
@@ -552,6 +650,16 @@ async function saveNotificationSettings() {
             silentMode,
             tagForReminders
         }));
+        
+        // Также сохраняем в IndexedDB для Service Worker
+        saveSettingsToIndexedDB({
+            botToken,
+            chatType,
+            groupId,
+            userId,
+            silentMode,
+            tagForReminders
+        });
         hideNotificationSettings();
         showNotification('Настройки уведомлений сохранены', 'success');
         
