@@ -284,10 +284,16 @@ function updateRemindersList() {
 }
 
 function updateGlobalRemindersList() {
+    // Обновляем боковую панель
     const globalRemindersList = document.getElementById('globalRemindersList');
     if (!globalRemindersList) {
         console.log('Элемент globalRemindersList не найден');
-        return;
+    }
+
+    // Обновляем канбан
+    const kanbanRemindersList = document.getElementById('reminders-list');
+    if (!kanbanRemindersList) {
+        console.log('Элемент reminders-list не найден');
     }
 
     const activeReminders = reminders.filter(r => !r.completed);
@@ -302,7 +308,14 @@ function updateGlobalRemindersList() {
 
     if (upcomingReminders.length === 0) {
         console.log('Нет предстоящих напоминаний, показываем пустое сообщение');
-        globalRemindersList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-sm text-center py-4">Нет предстоящих напоминаний</p>';
+        const emptyMessage = '<p class="text-gray-500 dark:text-gray-400 text-sm text-center py-4">Нет предстоящих напоминаний</p>';
+        
+        if (globalRemindersList) {
+            globalRemindersList.innerHTML = emptyMessage;
+        }
+        if (kanbanRemindersList) {
+            kanbanRemindersList.innerHTML = emptyMessage;
+        }
         return;
     }
 
@@ -337,8 +350,18 @@ function updateGlobalRemindersList() {
     }).join('');
 
     console.log('HTML контент для отображения:', htmlContent);
-    globalRemindersList.innerHTML = htmlContent;
-    console.log('HTML вставлен в элемент globalRemindersList');
+    
+    // Обновляем боковую панель
+    if (globalRemindersList) {
+        globalRemindersList.innerHTML = htmlContent;
+        console.log('HTML вставлен в элемент globalRemindersList');
+    }
+    
+    // Обновляем канбан
+    if (kanbanRemindersList) {
+        kanbanRemindersList.innerHTML = htmlContent;
+        console.log('HTML вставлен в элемент reminders-list');
+    }
 
     lucide.createIcons();
     
@@ -355,8 +378,15 @@ function debugReminders() {
     console.log('=== ОТЛАДКА НАПОМИНАНИЙ ===');
     console.log('Всего напоминаний:', reminders.length);
     console.log('Активные напоминания:', reminders.filter(r => !r.completed).length);
-    console.log('Элемент globalRemindersList:', document.getElementById('globalRemindersList'));
-    console.log('Содержимое элемента:', document.getElementById('globalRemindersList')?.innerHTML);
+    
+    const globalElement = document.getElementById('globalRemindersList');
+    const kanbanElement = document.getElementById('reminders-list');
+    
+    console.log('Элемент globalRemindersList (боковая панель):', globalElement);
+    console.log('Содержимое globalRemindersList:', globalElement?.innerHTML);
+    
+    console.log('Элемент reminders-list (канбан):', kanbanElement);
+    console.log('Содержимое reminders-list:', kanbanElement?.innerHTML);
     console.log('========================');
 }
 
