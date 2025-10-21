@@ -56,7 +56,9 @@ function updateKanbanBoard() {
     });
 
     // Обновляем иконки Lucide
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 }
 
 // Создание динамической структуры канбана на основе статусов лидов
@@ -207,7 +209,7 @@ function updatePipelineStagesDisplay() {
     const pipelineList = document.getElementById('pipelineList');
     if (!pipelineList) return;
 
-    pipelineList.innerHTML = pipelineStages.map(stage => `
+    pipelineList.innerHTML = leadStatuses.map(stage => `
         <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-500">
             <div class="flex items-center space-x-3">
                 <div class="w-4 h-4 rounded-full ${getStatusColorClass(stage.color)}"></div>
@@ -224,11 +226,13 @@ function updatePipelineStagesDisplay() {
         </div>
     `).join('');
 
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 }
 
 function updatePipelineStage(stageId) {
-    const stage = pipelineStages.find(s => s.id === stageId);
+    const stage = leadStatuses.find(s => s.id === stageId);
     if (!stage) return;
 
     const newName = prompt('Название этапа:', stage.name);
@@ -265,7 +269,7 @@ function addPipelineStage() {
         color: color
     };
 
-    pipelineStages.push(newStage);
+    leadStatuses.push(newStage);
     updatePipelineStagesDisplay();
     updateKanbanBoard();
 
@@ -286,7 +290,7 @@ function removePipelineStage(stageId) {
         }
     });
 
-    pipelineStages = pipelineStages.filter(s => s.id !== stageId);
+    leadStatuses = leadStatuses.filter(s => s.id !== stageId);
     updatePipelineStagesDisplay();
     updateKanbanBoard();
     updateLeadsTable();
@@ -302,8 +306,8 @@ async function savePipelineSettings() {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    key: 'pipeline_stages',
-                    value: JSON.stringify(pipelineStages)
+                    key: 'lead_statuses',
+                    value: JSON.stringify(leadStatuses)
                 })
             });
             
@@ -312,7 +316,7 @@ async function savePipelineSettings() {
             }
         }
         
-        localStorage.setItem('ff-pipeline-stages', JSON.stringify(pipelineStages));
+        localStorage.setItem('ff-lead-statuses', JSON.stringify(leadStatuses));
         hidePipelineSettings();
         showNotification('Настройки воронки сохранены', 'success');
         
@@ -325,6 +329,53 @@ async function savePipelineSettings() {
 // ========================================
 // HELPER FUNCTIONS
 // ========================================
+
+function getStatusText(statusId) {
+    const status = leadStatuses.find(s => s.id === statusId);
+    return status ? status.name : statusId;
+}
+
+function getSourceText(sourceId) {
+    const source = leadSources.find(s => s.id === sourceId);
+    return source ? source.name : sourceId;
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(amount);
+}
+
+// Функции для работы с деталями лидов и калькулятором
+function openLeadDetails(leadId) {
+    // Эта функция должна быть определена в leads.js
+    if (typeof window.openLeadDetails === 'function') {
+        window.openLeadDetails(leadId);
+    } else {
+        console.log('Функция openLeadDetails не найдена');
+    }
+}
+
+function addReminderForLead(leadId) {
+    // Эта функция должна быть определена в reminders.js
+    if (typeof window.addReminderForLead === 'function') {
+        window.addReminderForLead(leadId);
+    } else {
+        console.log('Функция addReminderForLead не найдена');
+    }
+}
+
+function openLeadCalculator(leadId) {
+    // Эта функция должна быть определена в calculator.js
+    if (typeof window.openLeadCalculator === 'function') {
+        window.openLeadCalculator(leadId);
+    } else {
+        console.log('Функция openLeadCalculator не найдена');
+    }
+}
 
 function getStatusColorClass(color) {
     const colorMap = {
@@ -383,7 +434,13 @@ window.FFKanban = {
     addPipelineStage,
     removePipelineStage,
     savePipelineSettings,
-    getStatusColorClass
+    getStatusColorClass,
+    getStatusText,
+    getSourceText,
+    formatCurrency,
+    openLeadDetails,
+    addReminderForLead,
+    openLeadCalculator
 };
 
 // Make functions available globally for onclick attributes
@@ -400,3 +457,9 @@ window.addPipelineStage = addPipelineStage;
 window.removePipelineStage = removePipelineStage;
 window.savePipelineSettings = savePipelineSettings;
 window.getStatusColorClass = getStatusColorClass;
+window.getStatusText = getStatusText;
+window.getSourceText = getSourceText;
+window.formatCurrency = formatCurrency;
+window.openLeadDetails = openLeadDetails;
+window.addReminderForLead = addReminderForLead;
+window.openLeadCalculator = openLeadCalculator;

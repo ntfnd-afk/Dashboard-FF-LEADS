@@ -474,7 +474,96 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Kanban Tab Content -->
+            <div id="kanban-content" class="tab-content hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Канбан доска</h2>
+                            <div class="flex items-center space-x-4">
+                                <button onclick="showPipelineSettings()" class="flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                                    <i data-lucide="settings" class="h-4 w-4 mr-2"></i>
+                                    Настройки воронки
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kanban Board -->
+                    <div class="p-6">
+                        <div id="kanban-columns-container" class="grid gap-4 overflow-x-auto kanban-scroll">
+                            <!-- Columns will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
+    </div>
+
+    </div>
+
+    <!-- Pipeline Settings Modal -->
+    <div id="pipelineSettingsModal" class="modal-overlay hidden">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    Настройки воронки продаж
+                </h3>
+                <button onclick="hidePipelineSettings()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i data-lucide="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <!-- Add New Stage -->
+                <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Добавить новый этап</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Название этапа</label>
+                            <input type="text" id="newPipelineName" placeholder="Например: Переговоры" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Цвет</label>
+                            <select id="newPipelineColor" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                                <option value="blue">Синий</option>
+                                <option value="yellow">Желтый</option>
+                                <option value="purple">Фиолетовый</option>
+                                <option value="orange">Оранжевый</option>
+                                <option value="green">Зеленый</option>
+                                <option value="red">Красный</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="addPipelineStage()" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                                <i data-lucide="plus" class="h-4 w-4 mr-2 inline"></i>
+                                Добавить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing Stages -->
+                <div class="mb-6">
+                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Текущие этапы воронки</h4>
+                    <div id="pipelineList" class="space-y-3">
+                        <!-- Pipeline stages will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end space-x-4">
+                    <button onclick="hidePipelineSettings()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                        Отмена
+                    </button>
+                    <button onclick="savePipelineSettings()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                        <i data-lucide="save" class="h-4 w-4 mr-2 inline"></i>
+                        Сохранить
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Import Services Modal -->
