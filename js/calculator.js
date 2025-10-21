@@ -127,7 +127,13 @@ function showCalculatorModal(leadId = null) {
                 calculateTotalInModal();
                 
                 // Показываем форму нового расчета
-                document.getElementById('newCalculationForm').classList.remove('hidden');
+                const newCalculationForm = document.getElementById('newCalculationForm');
+                if (newCalculationForm) {
+                    newCalculationForm.classList.remove('hidden');
+                } else {
+                    // Если формы нет, создаем её
+                    showNewCalculationForm();
+                }
             }
         }
     }
@@ -237,10 +243,7 @@ function populateCalculatorHistory(lead, calculations) {
                     </div>
                 </div>
                 
-                <!-- Форма нового расчета (скрыта по умолчанию) -->
-                <div id="newCalculationForm" class="hidden">
-                    ${createNewCalculationForm()}
-                </div>
+                <!-- Форма нового расчета будет создана динамически при нажатии кнопки -->
             `;
         }
     }
@@ -424,7 +427,24 @@ function createNewCalculationForm() {
 // Показать форму нового расчета
 function showNewCalculationForm() {
     console.log('showNewCalculationForm вызвана');
-    const form = document.getElementById('newCalculationForm');
+    
+    // Проверяем, есть ли уже форма в DOM
+    let form = document.getElementById('newCalculationForm');
+    
+    if (!form) {
+        // Если формы нет, создаем её
+        const modalContent = document.getElementById('calculatorModalContent');
+        if (modalContent) {
+            // Добавляем форму в конец содержимого модального окна
+            modalContent.insertAdjacentHTML('beforeend', `
+                <div id="newCalculationForm" class="mt-6">
+                    ${createNewCalculationForm()}
+                </div>
+            `);
+            form = document.getElementById('newCalculationForm');
+        }
+    }
+    
     console.log('Форма найдена:', form);
     if (form) {
         form.classList.remove('hidden');
@@ -446,7 +466,7 @@ function showNewCalculationForm() {
         
         lucide.createIcons();
     } else {
-        console.error('Элемент newCalculationForm не найден');
+        console.error('Элемент newCalculationForm не найден и не может быть создан');
     }
 }
 
