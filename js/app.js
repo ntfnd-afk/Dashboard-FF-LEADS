@@ -192,7 +192,7 @@ function updateConnectionStatus() {
 function showNotification(message, type = 'info') {
     // Создаем элемент уведомления
     const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
+    notification.className = `fixed top-4 right-4 z-[9999] px-6 py-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
     
     // Определяем стили в зависимости от типа
     switch (type) {
@@ -687,3 +687,10 @@ window.updateConnectionStatus = updateConnectionStatus;
 window.showNotification = showNotification;
 window.formatDate = formatDate;
 window.formatCurrency = formatCurrency;
+
+// Make data available globally
+window.leads = leads;
+window.leadStatuses = leadStatuses;
+window.leadSources = leadSources;
+window.services = services;
+window.currentUser = currentUser;

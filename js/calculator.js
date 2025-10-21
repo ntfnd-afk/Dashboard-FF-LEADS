@@ -76,6 +76,7 @@ function generateCalculationNumber() {
 function addServiceToModal() {
     const service = {
         id: nextServiceId++,
+        serviceId: null, // ID услуги из настроек
         name: '',
         description: '',
         quantity: 1,
@@ -107,6 +108,22 @@ function updateServiceInModal(serviceId, field, value) {
     }
 }
 
+function updateServiceFromDropdown(serviceId, selectedServiceId) {
+    const service = modalServices.find(s => s.id === serviceId);
+    if (service && selectedServiceId) {
+        const selectedService = services.find(s => s.id == selectedServiceId);
+        if (selectedService) {
+            service.serviceId = selectedService.id;
+            service.name = selectedService.name;
+            service.price = selectedService.price;
+            service.total = service.quantity * service.price;
+            
+            updateModalServicesList();
+            calculateTotalInModal();
+        }
+    }
+}
+
 function updateModalServicesList() {
     const container = document.getElementById('modalServicesList');
     if (!container) return;
@@ -134,7 +151,10 @@ function updateModalServicesList() {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Название услуги</label>
-                    <input type="text" value="${service.name}" onchange="updateServiceInModal(${service.id}, 'name', this.value)" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white" placeholder="Название услуги">
+                    <select onchange="updateServiceFromDropdown(${service.id}, this.value)" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                        <option value="">Выберите услугу</option>
+                        ${services.map(s => `<option value="${s.id}" ${service.serviceId === s.id ? 'selected' : ''}>${s.name} - ${s.price} ₽/${s.unit}</option>`).join('')}
+                    </select>
                 </div>
                 
                 <div>
@@ -253,6 +273,7 @@ const FFCalculator = {
     addServiceToModal,
     removeServiceFromModal,
     updateServiceInModal,
+    updateServiceFromDropdown,
     updateModalServicesList,
     calculateTotalInModal,
     generatePDFFromModal,
@@ -266,6 +287,7 @@ window.hideCalculatorModal = hideCalculatorModal;
 window.addServiceToModal = addServiceToModal;
 window.removeServiceFromModal = removeServiceFromModal;
 window.updateServiceInModal = updateServiceInModal;
+window.updateServiceFromDropdown = updateServiceFromDropdown;
 window.calculateTotalInModal = calculateTotalInModal;
 window.generatePDFFromModal = generatePDFFromModal;
 window.saveCalculationFromModal = saveCalculationFromModal;

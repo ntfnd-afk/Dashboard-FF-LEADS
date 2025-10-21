@@ -61,7 +61,7 @@ function updateKanbanBoard() {
 
 // Создание динамической структуры канбана на основе статусов лидов
 function createDynamicKanbanStructure() {
-    const pipelineContainer = document.querySelector('#kanban-content .grid');
+    const pipelineContainer = document.querySelector('#kanban-content .flex');
     if (!pipelineContainer) return;
 
     // Создаем HTML для колонок на основе статусов лидов
@@ -71,7 +71,7 @@ function createDynamicKanbanStructure() {
         const textColorClass = getStatusTextColorClass(status.color);
         
         return `
-            <div class="${bgColorClass} p-4 rounded-lg" ondrop="drop(event, '${status.id}')" ondragover="allowDrop(event)">
+            <div class="${bgColorClass} p-4 rounded-lg w-80 flex-shrink-0" ondrop="drop(event, '${status.id}')" ondragover="allowDrop(event)">
                 <h3 class="font-semibold ${textColorClass} mb-2">${status.name}</h3>
                 <div class="text-2xl font-bold ${textColorClass} mb-2" id="${status.id}-leads-count">0</div>
                 <div id="${status.id}-leads-column" class="space-y-2 min-h-[200px]">

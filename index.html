@@ -76,6 +76,30 @@
             padding: 20px;
         }
         
+        /* Kanban scroll styles */
+        .kanban-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+        }
+        
+        .kanban-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .kanban-scroll::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 4px;
+        }
+        
+        .kanban-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+        
+        .kanban-scroll::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+        
         .modal-content {
             position: relative;
             max-height: 90vh;
@@ -541,8 +565,10 @@
                     </div>
                     
                     <!-- Pipeline Stages -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-                        <!-- Колонки канбана будут созданы динамически на основе статусов лидов -->
+                    <div class="overflow-x-auto kanban-scroll">
+                        <div class="flex gap-4 min-w-max pb-4">
+                            <!-- Колонки канбана будут созданы динамически на основе статусов лидов -->
+                        </div>
                     </div>
                     
                     <!-- Reminders Section -->
