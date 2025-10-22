@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Воронка продаж - FF Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .funnel-container {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .funnel-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .funnel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .funnel-step {
+            background: white;
+            border-radius: 15px;
+            padding: 25px 40px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            transition: all 0.3s ease;
+            border-left: 5px solid #667eea;
+        }
+
+        .funnel-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .funnel-step.new { border-left-color: #28a745; }
+        .funnel-step.contacted { border-left-color: #17a2b8; }
+        .funnel-step.quoted { border-left-color: #ffc107; }
+        .funnel-step.negotiating { border-left-color: #fd7e14; }
+        .funnel-step.closed { border-left-color: #dc3545; }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .step-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .step-count {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .step-percentage {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .step-conversion {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .step-conversion.positive {
+            color: #28a745;
+        }
+
+        .step-conversion.negative {
+            color: #dc3545;
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .funnel-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .funnel-step {
+                padding: 20px 25px;
+            }
+            
+            .step-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Воронка продаж</h1>
+            <p>Анализ конверсии по этапам продаж</p>
+        </div>
+        
+        <div class="funnel-container">
+            <div id="loading" class="loading">
+                <h3>📊 Загрузка данных воронки...</h3>
+            </div>
+            
+            <div id="error" class="error" style="display: none;">
+                <h3>❌ Ошибка загрузки данных</h3>
+                <p id="error-message"></p>
+            </div>
+            
+            <div id="funnel-content" style="display: none;">
+                <div class="funnel-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-leads">0</div>
+                        <div class="stat-label">Всего лидов</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-conversion">0%</div>
+                        <div class="stat-label">Общая конверсия</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="avg-conversion">0%</div>
+                        <div class="stat-label">Средняя конверсия</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="closed-deals">0</div>
+                        <div class="stat-label">Закрытых сделок</div>
+                    </div>
+                </div>
+                
+                <div class="funnel">
+                    <div class="funnel-step new">
+                        <div class="step-header">
+                            <div class="step-title">🆕 Новый</div>
+                            <div class="step-count" id="count-new">0</div>
+                        </div>
+                        <div class="step-percentage" id="percent-new">100%</div>
+                        <div class="step-conversion" id="conversion-new">Базовый уровень</div>
+                    </div>
+                    
+                    <div class="arrow">⬇️</div>
+                    
+                    <div class="funnel-step contacted">
+                        <div class="step-header">
+                            <div class="step-title">📞 Связались</div>
+                            <div class="step-count" id="count-contacted">0</div>
+                        </div>
+                        <div class="step-percentage" id="percent-contacted">0%</div>
+                        <div class="step-conversion" id="conversion-contacted">Конверсия: 0%</div>
+                    </div>
+                    
+                    <div class="arrow">⬇️</div>
+                    
+                    <div class="funnel-step quoted">
+                        <div class="step-header">
+                            <div class="step-title">💰 На просчете</div>
+                            <div class="step-count" id="count-quoted">0</div>
+                        </div>
+                        <div class="step-percentage" id="percent-quoted">0%</div>
+                        <div class="step-conversion" id="conversion-quoted">Конверсия: 0%</div>
+                    </div>
+                    
+                    <div class="arrow">⬇️</div>
+                    
+                    <div class="funnel-step negotiating">
+                        <div class="step-header">
+                            <div class="step-title">🤝 Переговоры</div>
+                            <div class="step-count" id="count-negotiating">0</div>
+                        </div>
+                        <div class="step-percentage" id="percent-negotiating">0%</div>
+                        <div class="step-conversion" id="conversion-negotiating">Конверсия: 0%</div>
+                    </div>
+                    
+                    <div class="arrow">⬇️</div>
+                    
+                    <div class="funnel-step closed">
+                        <div class="step-header">
+                            <div class="step-title">✅ Закрыт успешно</div>
+                            <div class="step-count" id="count-closed">0</div>
+                        </div>
+                        <div class="step-percentage" id="percent-closed">0%</div>
+                        <div class="step-conversion" id="conversion-closed">Конверсия: 0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API базовый URL
+        const API_BASE_URL = 'https://api.fulfilment-one.ru/api/';
+        
+        // Статусы воронки в правильном порядке
+        const FUNNEL_STEPS = [
+            { key: 'new', name: 'Новый', icon: '🆕' },
+            { key: 'contacted', name: 'Связались', icon: '📞' },
+            { key: 'quoted', name: 'На просчете', icon: '💰' },
+            { key: 'negotiating', name: 'Переговоры', icon: '🤝' },
+            { key: 'closed', name: 'Закрыт успешно', icon: '✅' }
+        ];
+        
+        // Маппинг статусов из БД на статусы воронки
+        const STATUS_MAPPING = {
+            'new': 'new',
+            'contacted': 'contacted', 
+            'quoted': 'quoted',
+            'negotiating': 'negotiating',
+            'closed': 'closed',
+            'closed_won': 'closed',
+            'closed_lost': 'closed'
+        };
+        
+        async function loadFunnelData() {
+            try {
+                console.log('🔄 Загружаем данные воронки...');
+                
+                // Загружаем лиды
+                const response = await fetch(`${API_BASE_URL}leads`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const leads = await response.json();
+                console.log('📊 Получены лиды:', leads);
+                
+                // Обрабатываем данные
+                processFunnelData(leads);
+                
+                // Показываем контент
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('funnel-content').style.display = 'block';
+                
+            } catch (error) {
+                console.error('❌ Ошибка загрузки данных воронки:', error);
+                showError(error.message);
+            }
+        }
+        
+        function processFunnelData(leads) {
+            // Подсчитываем лиды по статусам
+            const statusCounts = {};
+            FUNNEL_STEPS.forEach(step => {
+                statusCounts[step.key] = 0;
+            });
+            
+            leads.forEach(lead => {
+                const mappedStatus = STATUS_MAPPING[lead.status] || 'new';
+                if (statusCounts.hasOwnProperty(mappedStatus)) {
+                    statusCounts[mappedStatus]++;
+                }
+            });
+            
+            console.log('📈 Статистика по статусам:', statusCounts);
+            
+            // Обновляем UI
+            updateFunnelUI(statusCounts);
+        }
+        
+        function updateFunnelUI(statusCounts) {
+            const totalLeads = statusCounts.new;
+            
+            // Обновляем общую статистику
+            document.getElementById('total-leads').textContent = totalLeads;
+            document.getElementById('closed-deals').textContent = statusCounts.closed;
+            
+            const totalConversion = totalLeads > 0 ? Math.round((statusCounts.closed / totalLeads) * 100) : 0;
+            document.getElementById('total-conversion').textContent = totalConversion + '%';
+            
+            // Обновляем каждый этап воронки
+            let previousCount = totalLeads;
+            
+            FUNNEL_STEPS.forEach((step, index) => {
+                const count = statusCounts[step.key] || 0;
+                const percentage = previousCount > 0 ? Math.round((count / previousCount) * 100) : 0;
+                const conversion = index > 0 ? Math.round((count / previousCount) * 100) : 100;
+                
+                // Обновляем счетчики
+                document.getElementById(`count-${step.key}`).textContent = count;
+                document.getElementById(`percent-${step.key}`).textContent = percentage + '%';
+                
+                // Обновляем конверсию
+                const conversionElement = document.getElementById(`conversion-${step.key}`);
+                if (index === 0) {
+                    conversionElement.textContent = 'Базовый уровень';
+                    conversionElement.className = 'step-conversion';
+                } else {
+                    conversionElement.textContent = `Конверсия: ${conversion}%`;
+                    conversionElement.className = `step-conversion ${conversion >= 50 ? 'positive' : 'negative'}`;
+                }
+                
+                previousCount = count;
+            });
+            
+            // Средняя конверсия
+            const conversions = FUNNEL_STEPS.slice(1).map(step => {
+                const count = statusCounts[step.key] || 0;
+                return previousCount > 0 ? (count / previousCount) * 100 : 0;
+            });
+            
+            const avgConversion = conversions.length > 0 ? 
+                Math.round(conversions.reduce((a, b) => a + b, 0) / conversions.length) : 0;
+            document.getElementById('avg-conversion').textContent = avgConversion + '%';
+        }
+        
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+        }
+        
+        // Загружаем данные при загрузке страницы
+        document.addEventListener('DOMContentLoaded', loadFunnelData);
+        
+        // Обновляем данные каждые 30 секунд
+        setInterval(loadFunnelData, 30000);
+    </script>
+</body>
+</html>

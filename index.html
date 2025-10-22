@@ -234,6 +234,10 @@
                         <i data-lucide="user-check" class="h-5 w-5 mr-2"></i>
                         Клиенты
                     </button>
+                    <button id="tab-funnel" onclick="showTab('funnel')" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                        <i data-lucide="trending-up" class="h-5 w-5 mr-2"></i>
+                        Воронка
+                    </button>
                     <button id="tab-kanban" onclick="showTab('kanban')" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
                         <i data-lucide="kanban" class="h-5 w-5 mr-2"></i>
                         Канбан
@@ -409,6 +413,70 @@
                                 <!-- Clients will be populated by JavaScript -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Funnel Tab Content -->
+            <div id="funnel-content" class="tab-content hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">🎯 Воронка продаж</h2>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                    Обновлено: <span id="funnelLastUpdate" class="font-semibold text-gray-900 dark:text-white">--</span>
+                                </div>
+                                <button onclick="loadFunnelData()" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                                    <i data-lucide="refresh-cw" class="h-4 w-4 mr-2"></i>
+                                    Обновить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Funnel Stats -->
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="funnel-total-leads">0</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">Всего лидов</div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-green-600 dark:text-green-400" id="funnel-total-conversion">0%</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">Общая конверсия</div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-purple-600 dark:text-purple-400" id="funnel-avg-conversion">0%</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">Средняя конверсия</div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-red-600 dark:text-red-400" id="funnel-closed-deals">0</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">Закрытых сделок</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Funnel Visualization -->
+                    <div class="p-6">
+                        <div id="funnel-loading" class="text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <p class="mt-2 text-gray-500 dark:text-gray-400">Загрузка данных воронки...</p>
+                        </div>
+                        
+                        <div id="funnel-error" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+                            <div class="flex">
+                                <i data-lucide="alert-circle" class="h-5 w-5 text-red-400 mr-2"></i>
+                                <div>
+                                    <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Ошибка загрузки данных</h3>
+                                    <p id="funnel-error-message" class="mt-1 text-sm text-red-700 dark:text-red-300"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="funnel-steps" class="space-y-4">
+                            <!-- Funnel steps will be populated by JavaScript -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1713,6 +1781,7 @@
     <script src="js/clients.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/kanban.js"></script>
+    <script src="js/funnel.js"></script>
     <script src="js/calculator.js"></script>
     <script src="js/services.js"></script>
     <script src="js/admin.js"></script>
