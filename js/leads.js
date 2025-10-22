@@ -159,6 +159,8 @@ async function addLead() {
             email: email || null
         };
         
+        console.log('📤 Отправляем в БД:', leadData);
+        
         
         if (editingId) {
             // Редактируем существующий лид
@@ -170,6 +172,7 @@ async function addLead() {
 
             if (response.ok) {
                 const updatedLead = await response.json();
+                console.log('📥 Ответ от сервера:', updatedLead);
                 
                 const index = leads.findIndex(l => l.id === parseInt(editingId));
                 if (index !== -1) {
@@ -240,6 +243,13 @@ function editLead(leadId) {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
 
+    console.log('🔍 Редактируем лид:', lead);
+    console.log('🔍 Поля лида:', {
+        inn: lead.inn,
+        kpp: lead.kpp,
+        contactPerson: lead.contactPerson,
+        email: lead.email
+    });
 
     // Store lead ID for editing
     document.getElementById('addLeadModal').setAttribute('data-editing-id', leadId);
