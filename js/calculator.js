@@ -394,10 +394,20 @@ function createNewCalculationForm() {
                     <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
                         Услуги фулфилмента
                     </h3>
-                    <button onclick="addServiceToModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                        <i data-lucide="plus" class="h-4 w-4 mr-2 inline"></i>
-                        Добавить услугу
-                    </button>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Итого:</div>
+                            <div class="text-lg font-bold text-blue-600 dark:text-blue-400" id="modalTotalAmount">0 ₽</div>
+                        </div>
+                        <button onclick="generatePDFFromModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                            <i data-lucide="file-text" class="h-4 w-4 mr-2 inline"></i>
+                            Создать PDF
+                        </button>
+                        <button onclick="saveCalculationFromModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+                            <i data-lucide="save" class="h-4 w-4 mr-2 inline"></i>
+                            Сохранить расчет
+                        </button>
+                    </div>
                 </div>
                 
                 <div id="modalServicesList" class="space-y-4">
@@ -405,49 +415,6 @@ function createNewCalculationForm() {
                 </div>
             </div>
 
-            <!-- Результаты расчета -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                    Результаты расчета
-                </h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
-                            <span class="text-gray-600 dark:text-gray-400">Стоимость услуг:</span>
-                            <span class="font-semibold text-gray-900 dark:text-white" id="modalTotalServicesCost">0 ₽</span>
-                        </div>
-                        <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
-                            <span class="text-gray-600 dark:text-gray-400">НДС (20%):</span>
-                            <span class="font-semibold text-gray-900 dark:text-white" id="modalVatAmount">0 ₽</span>
-                        </div>
-                        <div class="flex justify-between items-center py-2 text-lg font-bold">
-                            <span class="text-gray-900 dark:text-white">Итого:</span>
-                            <span class="text-blue-600 dark:text-blue-400" id="modalTotalAmount">0 ₽</span>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Действия</h4>
-                            <div class="space-y-2">
-                                <button onclick="calculateTotalInModal()" class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-                                    <i data-lucide="calculator" class="h-4 w-4 mr-2 inline"></i>
-                                    Пересчитать
-                                </button>
-                                <button onclick="generatePDFFromModal()" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                                    <i data-lucide="file-text" class="h-4 w-4 mr-2 inline"></i>
-                                    Создать PDF
-                                </button>
-                                <button onclick="saveCalculationFromModal()" class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
-                                    <i data-lucide="save" class="h-4 w-4 mr-2 inline"></i>
-                                    Сохранить расчет
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     `;
 }
@@ -567,8 +534,10 @@ function updateModalServicesList() {
     if (modalServices.length === 0) {
         container.innerHTML = `
             <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-                <i data-lucide="plus-circle" class="h-12 w-12 mx-auto mb-4"></i>
-                <p>Нажмите "Добавить услугу" для создания расчета</p>
+                <button onclick="addServiceToModal()" class="inline-flex items-center justify-center w-16 h-16 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-full transition-colors cursor-pointer">
+                    <i data-lucide="plus" class="h-8 w-8 text-gray-600 dark:text-gray-300"></i>
+                </button>
+                <p class="mt-4">Нажмите на кружок для добавления услуги</p>
             </div>
         `;
         lucide.createIcons();
@@ -611,7 +580,13 @@ function updateModalServicesList() {
                 </div>
             </div>
         </div>
-    `).join('');
+    `).join('') + `
+        <div class="text-center py-4">
+            <button onclick="addServiceToModal()" class="inline-flex items-center justify-center w-12 h-12 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-full transition-colors cursor-pointer">
+                <i data-lucide="plus" class="h-6 w-6 text-gray-600 dark:text-gray-300"></i>
+            </button>
+        </div>
+    `;
     
     lucide.createIcons();
 }
@@ -625,9 +600,11 @@ function calculateTotalInModal() {
     const vatAmount = totalServicesCost * 0.2;
     const totalAmount = totalServicesCost + vatAmount;
     
-    document.getElementById('modalTotalServicesCost').textContent = `${totalServicesCost.toFixed(2)} ₽`;
-    document.getElementById('modalVatAmount').textContent = `${vatAmount.toFixed(2)} ₽`;
-    document.getElementById('modalTotalAmount').textContent = `${totalAmount.toFixed(2)} ₽`;
+    // Обновляем только итого в хеддере
+    const totalElement = document.getElementById('modalTotalAmount');
+    if (totalElement) {
+        totalElement.textContent = `${totalAmount.toFixed(2)} ₽`;
+    }
 }
 
 function generatePDFFromModal() {
