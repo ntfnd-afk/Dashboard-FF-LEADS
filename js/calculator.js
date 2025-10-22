@@ -350,15 +350,6 @@ function createCalculationCard(calculation) {
 function createNewCalculationForm() {
     return `
         <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                    Новый расчет
-                </h3>
-                <button onclick="hideNewCalculationForm()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <i data-lucide="x" class="h-6 w-6"></i>
-                </button>
-            </div>
-            
             <!-- Информация о расчете -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div>
