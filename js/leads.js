@@ -589,6 +589,13 @@ function convertLeadFromDetails() {
     }
 }
 
+function deleteLeadFromDetails() {
+    if (currentLeadDetails) {
+        hideLeadDetails();
+        deleteLead(currentLeadDetails.id);
+    }
+}
+
 // ========================================
 // LEADS TABLE FUNCTIONS
 // ========================================
