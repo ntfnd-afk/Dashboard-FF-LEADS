@@ -524,7 +524,6 @@ function addServiceToModal() {
         id: nextServiceId++,
         serviceId: null, // ID услуги из настроек
         name: '',
-        description: '',
         quantity: 1,
         price: 0,
         total: 0
@@ -594,18 +593,13 @@ function updateModalServicesList() {
                 </button>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Название услуги</label>
                     <select onchange="updateServiceFromDropdown(${service.id}, this.value)" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
                         <option value="">Выберите услугу</option>
                         ${services.map(s => `<option value="${s.id}" ${service.serviceId === s.id ? 'selected' : ''}>${s.name} - ${s.price} ₽/${s.unit}</option>`).join('')}
                     </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Описание</label>
-                    <input type="text" value="${service.description}" onchange="updateServiceInModal(${service.id}, 'description', this.value)" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white" placeholder="Описание услуги">
                 </div>
                 
                 <div>

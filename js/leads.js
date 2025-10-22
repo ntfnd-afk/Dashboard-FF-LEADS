@@ -178,11 +178,10 @@ async function addLead() {
                         clientName: updatedLead.client_name || updatedLead.name,
                         contact: updatedLead.phone,
                         comments: updatedLead.notes,
-                        // Используем данные из ответа или fallback на отправленные данные
-                        inn: updatedLead.inn || leadData.inn,
-                        kpp: updatedLead.kpp || leadData.kpp,
-                        contactPerson: updatedLead.contact_person || leadData.contact_person,
-                        email: updatedLead.email || leadData.email
+                        inn: updatedLead.inn,
+                        kpp: updatedLead.kpp,
+                        contactPerson: updatedLead.contact_person,
+                        email: updatedLead.email
                     };
                 }
                 showNotification('Лид обновлен', 'success');
@@ -205,11 +204,10 @@ async function addLead() {
                     clientName: newLead.client_name || newLead.name,
                     contact: newLead.phone,
                     comments: newLead.notes,
-                    // Используем данные из ответа или fallback на отправленные данные
-                    inn: newLead.inn || leadData.inn,
-                    kpp: newLead.kpp || leadData.kpp,
-                    contactPerson: newLead.contact_person || leadData.contact_person,
-                    email: newLead.email || leadData.email
+                    inn: newLead.inn,
+                    kpp: newLead.kpp,
+                    contactPerson: newLead.contact_person,
+                    email: newLead.email
                 });
                 showNotification('Лид добавлен', 'success');
             } else {
