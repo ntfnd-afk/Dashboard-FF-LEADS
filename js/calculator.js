@@ -291,8 +291,6 @@ function populateCalculatorHistory(lead, calculations) {
 // Создание карточки расчета
 function createCalculationCard(calculation) {
     const totalAmount = calculation.services.reduce((sum, service) => sum + (service.quantity * service.price), 0);
-    const vatAmount = totalAmount * 0.2;
-    const finalAmount = totalAmount + vatAmount;
     
     return `
         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -307,7 +305,7 @@ function createCalculationCard(calculation) {
                 </div>
                 <div class="text-right">
                     <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
-                        ${formatCurrency(finalAmount)}
+                        ${formatCurrency(totalAmount)}
                     </div>
                     <div class="text-sm text-gray-500 dark:text-gray-400">
                         ${calculation.services.length} услуг
@@ -335,6 +333,10 @@ function createCalculationCard(calculation) {
                     <button onclick="viewCalculation(${calculation.id})" class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition-colors">
                         <i data-lucide="eye" class="h-4 w-4 mr-1 inline"></i>
                         Просмотр
+                    </button>
+                    <button onclick="editCalculation(${calculation.id})" class="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded transition-colors">
+                        <i data-lucide="edit" class="h-4 w-4 mr-1 inline"></i>
+                        Редактировать
                     </button>
                     <button onclick="generatePDFForCalculation(${calculation.id})" class="px-3 py-1 text-sm bg-purple-100 hover:bg-purple-200 dark:bg-purple-900 dark:hover:bg-purple-800 text-purple-700 dark:text-purple-300 rounded transition-colors">
                         <i data-lucide="file-text" class="h-4 w-4 mr-1 inline"></i>
@@ -591,19 +593,51 @@ function updateModalServicesList() {
     lucide.createIcons();
 }
 
-// ========================================
-// CALCULATION FUNCTIONS
+// Редактирование расчета
+function editCalculation(calculationId) {
+    const calculation = calculations.find(calc => calc.id === calculationId);
+    if (!calculation) {
+        showNotification('Расчет не найден', 'error');
+        return;
+    }
+    
+    // Загружаем данные расчета в форму
+    modalServices = [...calculation.services];
+    nextServiceId = Math.max(...modalServices.map(s => s.id)) + 1;
+    
+    // Заполняем поля формы
+    document.getElementById('modalClientName').value = calculation.leadName || '';
+    document.getElementById('modalCalculationDate').value = new Date(calculation.createdAt).toLocaleDateString('ru-RU');
+    document.getElementById('modalCalculationNumber').value = calculation.calculationNumber || '';
+    document.getElementById('modalManager').value = calculation.manager || '';
+    document.getElementById('modalComments').value = calculation.comments || '';
+    
+    // Показываем форму редактирования
+    showNewCalculationForm();
+    
+    // Обновляем заголовок
+    document.getElementById('calculatorModalTitle').textContent = `Редактирование расчета #${calculationId}`;
+    document.getElementById('calculatorModalSubtitle').textContent = `Лид: ${calculation.leadName}`;
+    
+    // Обновляем услуги и расчеты
+    updateModalServicesList();
+    calculateTotalInModal();
+    
+    // Сохраняем ID редактируемого расчета
+    document.getElementById('calculatorModal').setAttribute('data-editing-calculation-id', calculationId);
+    
+    showNotification('Расчет загружен для редактирования', 'success');
+}
+
 // ========================================
 
 function calculateTotalInModal() {
     const totalServicesCost = modalServices.reduce((sum, service) => sum + service.total, 0);
-    const vatAmount = totalServicesCost * 0.2;
-    const totalAmount = totalServicesCost + vatAmount;
     
-    // Обновляем только итого в хеддере
+    // Обновляем только итого в хеддере (без НДС)
     const totalElement = document.getElementById('modalTotalAmount');
     if (totalElement) {
-        totalElement.textContent = `${totalAmount.toFixed(2)} ₽`;
+        totalElement.textContent = `${totalServicesCost.toFixed(2)} ₽`;
     }
 }
 
@@ -646,8 +680,11 @@ async function saveCalculationFromModal() {
         return;
     }
     
+    // Проверяем, редактируем ли мы существующий расчет
+    const editingCalculationId = document.getElementById('calculatorModal').getAttribute('data-editing-calculation-id');
+    const isEditing = editingCalculationId !== null;
+    
     const calculationData = {
-        id: nextCalculationId++,
         leadId: currentLeadForCalculation.id,
         leadUniqueCode: currentLeadForCalculation.uniqueCode,
         leadName: currentLeadForCalculation.clientName || currentLeadForCalculation.name,
@@ -657,10 +694,21 @@ async function saveCalculationFromModal() {
         manager: document.getElementById('modalManager').value,
         comments: document.getElementById('modalComments').value,
         totalServicesCost: modalServices.reduce((sum, service) => sum + service.total, 0),
-        vatAmount: modalServices.reduce((sum, service) => sum + service.total, 0) * 0.2,
-        totalAmount: modalServices.reduce((sum, service) => sum + service.total, 0) * 1.2,
+        totalAmount: modalServices.reduce((sum, service) => sum + service.total, 0),
         createdAt: new Date().toISOString()
     };
+    
+    if (isEditing) {
+        // Обновляем существующий расчет
+        calculationData.id = parseInt(editingCalculationId);
+        const existingCalculation = calculations.find(calc => calc.id === calculationData.id);
+        if (existingCalculation) {
+            calculationData.createdAt = existingCalculation.createdAt; // Сохраняем оригинальную дату создания
+        }
+    } else {
+        // Создаем новый расчет
+        calculationData.id = nextCalculationId++;
+    }
     
     try {
         // Сохраняем в базу данных (если онлайн)
@@ -699,8 +747,15 @@ async function saveCalculationFromModal() {
             }
         }
         
-        // Добавляем в массив расчетов
-        calculations.push(calculationData);
+        // Обновляем или добавляем в массив расчетов
+        if (isEditing) {
+            const existingIndex = calculations.findIndex(calc => calc.id === calculationData.id);
+            if (existingIndex !== -1) {
+                calculations[existingIndex] = calculationData;
+            }
+        } else {
+            calculations.push(calculationData);
+        }
         
         // Сохраняем в localStorage
         saveCalculationsToStorage();
@@ -730,7 +785,7 @@ async function saveCalculationFromModal() {
             }
         }
         
-        showNotification('Расчет сохранен', 'success');
+        showNotification(isEditing ? 'Расчет обновлен' : 'Расчет сохранен', 'success');
         console.log('Сохраненный расчет:', calculationData);
         
         // Показываем список всех расчетов лида
@@ -950,6 +1005,7 @@ const FFCalculator = {
     removeServiceFromModal,
     updateServiceInModal,
     updateServiceFromDropdown,
+    editCalculation,
     updateModalServicesList,
     calculateTotalInModal,
     generatePDFFromModal,
@@ -968,6 +1024,7 @@ window.hideCalculatorModal = hideCalculatorModal;
 window.showNewCalculationForm = showNewCalculationForm;
 window.hideNewCalculationForm = hideNewCalculationForm;
 window.viewCalculation = viewCalculation;
+window.editCalculation = editCalculation;
 window.generatePDFForCalculation = generatePDFForCalculation;
 window.addServiceToModal = addServiceToModal;
 window.removeServiceFromModal = removeServiceFromModal;
