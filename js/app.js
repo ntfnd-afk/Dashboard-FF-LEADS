@@ -722,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 'addReminderModal', closeFunction: 'hideAddReminderModal' },
         { id: 'notificationSettingsModal', closeFunction: 'hideNotificationSettings' },
         { id: 'userRegistrationModal', closeFunction: 'hideUserRegistrationModal' },
-        { id: 'loginModal', closeFunction: 'hideLoginModal' },
+        // { id: 'loginModal', closeFunction: 'hideLoginModal' }, // Исключаем - не должно закрываться по клику на фон
         { id: 'convertLeadModal', closeFunction: 'hideConvertLeadModal' },
         { id: 'leadDetailsModal', closeFunction: 'hideLeadDetails' },
         { id: 'adminSettingsModal', closeFunction: 'hideAdminSettings' },

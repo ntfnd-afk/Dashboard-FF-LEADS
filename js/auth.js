@@ -135,6 +135,11 @@ function showLoginError(message) {
 }
 
 function hideLoginModal() {
+    // Не закрываем окно авторизации если пользователь не авторизован
+    if (!currentUser) {
+        return;
+    }
+    
     document.getElementById('loginModal').classList.add('hidden');
     // Очищаем форму
     document.getElementById('loginUsername').value = '';
