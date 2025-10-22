@@ -159,10 +159,6 @@ async function addLead() {
             email: email || null
         };
         
-        console.log('📤 Отправляем в БД:', leadData);
-        console.log('📤 URL запроса:', `${API_BASE_URL}/leads${editingId ? `/${editingId}` : ''}`);
-        console.log('📤 Метод:', editingId ? 'PUT' : 'POST');
-        
         
         if (editingId) {
             // Редактируем существующий лид
@@ -174,9 +170,6 @@ async function addLead() {
 
             if (response.ok) {
                 const updatedLead = await response.json();
-                console.log('📥 Ответ от сервера:', updatedLead);
-                console.log('📥 Статус ответа:', response.status);
-                console.log('📥 Заголовки ответа:', response.headers);
                 
                 const index = leads.findIndex(l => l.id === parseInt(editingId));
                 if (index !== -1) {
@@ -194,9 +187,6 @@ async function addLead() {
                 }
                 showNotification('Лид обновлен', 'success');
             } else {
-                console.error('❌ Ошибка ответа сервера:', response.status, response.statusText);
-                const errorText = await response.text();
-                console.error('❌ Текст ошибки:', errorText);
                 throw new Error('Ошибка обновления лида');
             }
         } else {
@@ -209,8 +199,6 @@ async function addLead() {
 
             if (response.ok) {
                 const newLead = await response.json();
-                console.log('📥 Ответ от сервера при создании:', newLead);
-                console.log('📥 Статус ответа:', response.status);
                 
                 leads.push({
                     ...newLead,
@@ -225,9 +213,6 @@ async function addLead() {
                 });
                 showNotification('Лид добавлен', 'success');
             } else {
-                console.error('❌ Ошибка ответа сервера при создании:', response.status, response.statusText);
-                const errorText = await response.text();
-                console.error('❌ Текст ошибки:', errorText);
                 throw new Error('Ошибка сохранения лида');
             }
         }
@@ -256,14 +241,6 @@ async function addLead() {
 function editLead(leadId) {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
-
-    console.log('🔍 Редактируем лид:', lead);
-    console.log('🔍 Поля лида:', {
-        inn: lead.inn,
-        kpp: lead.kpp,
-        contactPerson: lead.contactPerson,
-        email: lead.email
-    });
 
     // Store lead ID for editing
     document.getElementById('addLeadModal').setAttribute('data-editing-id', leadId);
