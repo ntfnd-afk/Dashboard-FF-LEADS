@@ -30,7 +30,7 @@ function loadCalculationsFromStorage() {
 // Загрузка расчетов из базы данных
 async function loadCalculationsFromDatabase() {
     try {
-        if (typeof isOnline === 'function' && isOnline()) {
+        // Пытаемся загрузить из БД
             const response = await fetch(`${API_BASE_URL}/calculations`);
             if (response.ok) {
                 const apiCalculations = await response.json();
@@ -73,7 +73,6 @@ async function loadCalculationsFromDatabase() {
                 console.log('Расчеты загружены из БД:', calculations.length);
                 return true;
             }
-        }
     } catch (error) {
         console.error('Ошибка загрузки расчетов из БД:', error);
     }
@@ -139,11 +138,20 @@ function openCalculatorForLead(leadId) {
     generateLeadCode(lead);
     
     // Загружаем расчеты для этого лида
-    const leadCalculations = getCalculationsForLead(leadId);
-    
-    // Показываем модальное окно со списком расчетов
-    showCalculatorModal();
-    showCalculationsList(leadCalculations);
+    loadCalculationsFromDatabase(leadId).then(() => {
+        const leadCalculations = getCalculationsForLead(leadId);
+        
+        // Показываем модальное окно со списком расчетов
+        showCalculatorModal();
+        showCalculationsList(leadCalculations);
+    }).catch(error => {
+        console.warn('Ошибка загрузки расчетов из БД, используем локальные:', error);
+        const leadCalculations = getCalculationsForLead(leadId);
+        
+        // Показываем модальное окно со списком расчетов
+        showCalculatorModal();
+        showCalculationsList(leadCalculations);
+    });
 }
 
 function showCalculatorModal(leadId = null) {
@@ -603,7 +611,12 @@ function editCalculation(calculationId) {
     
     // Загружаем данные расчета в форму
     modalServices = [...calculation.services];
-    nextServiceId = Math.max(...modalServices.map(s => s.id)) + 1;
+    // Правильно рассчитываем следующий ID для услуг
+    if (modalServices.length > 0) {
+        nextServiceId = Math.max(...modalServices.map(s => s.id)) + 1;
+    } else {
+        nextServiceId = 1;
+    }
     
     // Показываем форму редактирования СНАЧАЛА
     showNewCalculationForm();
@@ -719,12 +732,13 @@ async function saveCalculationFromModal() {
     }
     
     try {
-        // Сохраняем в базу данных (если онлайн)
-        if (typeof isOnline === 'function' && isOnline()) {
+        // Пытаемся сохранить в базу данных
+        try {
             const response = await fetch(`${API_BASE_URL}/calculations`, {
-                method: 'POST',
+                method: isEditing ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    id: isEditing ? calculationData.id : undefined,
                     lead_id: calculationData.leadId,
                     client_id: currentLeadForCalculation.clientId || null,
                     calculation_number: calculationData.calculationNumber,
@@ -732,10 +746,9 @@ async function saveCalculationFromModal() {
                     manager: calculationData.manager,
                     comments: calculationData.comments,
                     total_services_cost: calculationData.totalServicesCost,
-                    vat_amount: calculationData.vatAmount,
                     total_amount: calculationData.totalAmount,
                     status: 'draft',
-                    created_by: currentUser?.username || 'unknown',
+                    created_by: 'system',
                     items: modalServices.map(service => ({
                         service_name: service.name,
                         quantity: service.quantity,
@@ -753,6 +766,8 @@ async function saveCalculationFromModal() {
             } else {
                 console.warn('Ошибка сохранения в БД, сохраняем локально');
             }
+        } catch (dbError) {
+            console.warn('Ошибка подключения к БД, сохраняем локально:', dbError);
         }
         
         // Обновляем или добавляем в массив расчетов
