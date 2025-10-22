@@ -420,72 +420,63 @@
             <!-- Funnel Tab Content -->
             <div id="funnel-content" class="tab-content hidden">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <!-- Compact Header with Filters -->
+                    <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700">
                         <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">🎯 Воронка продаж</h2>
+                            <!-- Filters moved to header -->
                             <div class="flex items-center space-x-4">
-                                <div class="text-sm text-gray-500 dark:text-gray-400">
-                                    Обновлено: <span id="funnelLastUpdate" class="font-semibold text-gray-900 dark:text-white">--</span>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">📅 Период</label>
+                                    <div class="flex space-x-2">
+                                        <input type="date" id="funnelDateFrom" class="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white" onchange="loadFunnelData()">
+                                        <span class="flex items-center text-gray-500 dark:text-gray-400 text-sm">до</span>
+                                        <input type="date" id="funnelDateTo" class="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white" onchange="loadFunnelData()">
+                                    </div>
                                 </div>
-                                <button onclick="loadFunnelData()" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                                    <i data-lucide="refresh-cw" class="h-4 w-4 mr-2"></i>
-                                    Обновить
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">📊 Источник</label>
+                                    <select id="funnelSourceFilter" onchange="loadFunnelData()" class="w-40 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                                        <option value="">Все источники</option>
+                                        <!-- Опции будут загружены динамически -->
+                                    </select>
+                                </div>
+                                <button onclick="resetFunnelFilters()" class="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors" title="Сбросить фильтры">
+                                    <i data-lucide="x" class="h-4 w-4"></i>
                                 </button>
                             </div>
+                            
+                            <!-- Update button -->
+                            <button onclick="loadFunnelData()" class="flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">
+                                <i data-lucide="refresh-cw" class="h-4 w-4 mr-1"></i>
+                                Обновить
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Filters -->
-                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📅 Период</label>
-                                <div class="flex space-x-2">
-                                    <input type="date" id="funnelDateFrom" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white" onchange="loadFunnelData()">
-                                    <span class="flex items-center text-gray-500 dark:text-gray-400">до</span>
-                                    <input type="date" id="funnelDateTo" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white" onchange="loadFunnelData()">
-                                </div>
+                    <!-- Compact Funnel Stats -->
+                    <div class="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                        <div class="grid grid-cols-4 gap-3">
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3 text-center">
+                                <div class="text-xl font-bold text-blue-600 dark:text-blue-400" id="funnel-total-leads">0</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Всего лидов</div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📊 Источник</label>
-                                <select id="funnelSourceFilter" onchange="loadFunnelData()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
-                                    <option value="">Все источники</option>
-                                    <!-- Опции будут загружены динамически -->
-                                </select>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3 text-center">
+                                <div class="text-xl font-bold text-green-600 dark:text-green-400" id="funnel-total-conversion">0%</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Общая конверсия</div>
                             </div>
-                            <div class="flex items-end">
-                                <button onclick="resetFunnelFilters()" class="w-full px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
-                                    <i data-lucide="x" class="h-4 w-4 mr-2 inline"></i>
-                                    Сбросить фильтры
-                                </button>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3 text-center">
+                                <div class="text-xl font-bold text-purple-600 dark:text-purple-400" id="funnel-avg-conversion">0%</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Средняя конверсия</div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Funnel Stats -->
-                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-                                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="funnel-total-leads">0</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Всего лидов</div>
-                            </div>
-                            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-                                <div class="text-2xl font-bold text-green-600 dark:text-green-400" id="funnel-total-conversion">0%</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Общая конверсия</div>
-                            </div>
-                            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-                                <div class="text-2xl font-bold text-purple-600 dark:text-purple-400" id="funnel-avg-conversion">0%</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Средняя конверсия</div>
-                            </div>
-                            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-                                <div class="text-2xl font-bold text-red-600 dark:text-red-400" id="funnel-closed-deals">0</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Закрытых сделок</div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3 text-center">
+                                <div class="text-xl font-bold text-red-600 dark:text-red-400" id="funnel-closed-deals">0</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Закрытых сделок</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Funnel Visualization -->
-                    <div class="p-6">
+                    <!-- Compact Funnel Visualization -->
+                    <div class="p-4">
                         <div id="funnel-loading" class="text-center py-8">
                             <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                             <p class="mt-2 text-gray-500 dark:text-gray-400">Загрузка данных воронки...</p>

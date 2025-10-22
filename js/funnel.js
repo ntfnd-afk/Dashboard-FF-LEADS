@@ -316,7 +316,7 @@ function showFunnelFilterInfo() {
     }
 }
 
-// Создание этапов воронки (горизонтальная версия)
+// Создание компактных этапов воронки
 function createFunnelSteps(statusCounts) {
     const container = document.getElementById('funnel-steps');
     container.innerHTML = '';
@@ -324,9 +324,9 @@ function createFunnelSteps(statusCounts) {
     const stepOrder = FUNNEL_STEPS.map(step => step.key);
     const totalLeads = statusCounts.new || 0;
     
-    // Создаем контейнер для горизонтальной воронки
+    // Создаем контейнер для компактной воронки
     const funnelContainer = document.createElement('div');
-    funnelContainer.className = 'space-y-4';
+    funnelContainer.className = 'space-y-2';
     
     FUNNEL_STEPS.forEach((step, index) => {
         const count = statusCounts[step.key] || 0;
@@ -342,7 +342,7 @@ function createFunnelSteps(statusCounts) {
         // Рассчитываем процент от общего количества лидов
         const percentage = totalLeads > 0 ? Math.round((count / totalLeads) * 100) : 0;
         
-        // Создаем горизонтальный элемент этапа
+        // Создаем компактный элемент этапа
         const stepElement = createHorizontalFunnelStep(step, count, percentage, conversion, index, totalLeads);
         funnelContainer.appendChild(stepElement);
     });
@@ -383,55 +383,42 @@ function createFunnelStepElement(step, count, percentage, conversion, index) {
     return stepDiv;
 }
 
-// Создание горизонтального элемента этапа воронки
+// Создание компактного горизонтального элемента этапа воронки
 function createHorizontalFunnelStep(step, count, percentage, conversion, index, totalLeads) {
     const stepDiv = document.createElement('div');
-    stepDiv.className = 'bg-white dark:bg-gray-800 rounded-lg p-4 shadow-md transition-all duration-300 hover:shadow-lg';
+    stepDiv.className = 'bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm transition-all duration-300 hover:shadow-md';
     
     const isFirstStep = index === 0;
-    const conversionText = isFirstStep ? 'Базовый уровень' : `Конверсия: ${conversion}%`;
     const conversionClass = isFirstStep ? 'text-gray-600 dark:text-gray-400' : (conversion >= 50 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400');
     
     // Определяем цвет прогресс-бара
     const progressColor = getProgressBarColor(step.color);
     
     stepDiv.innerHTML = `
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center justify-between mb-2">
             <div class="flex items-center">
-                <span class="text-xl mr-2">${step.icon}</span>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${step.name}</h3>
+                <span class="text-lg mr-2">${step.icon}</span>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">${step.name}</h3>
             </div>
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-4">
                 <div class="text-right">
-                    <div class="text-2xl font-bold text-gray-900 dark:text-white">${count}</div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">лидов</div>
+                    <div class="text-lg font-bold text-gray-900 dark:text-white">${count}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">лидов</div>
                 </div>
                 <div class="text-right">
-                    <div class="text-lg font-semibold ${conversionClass}">${conversion}%</div>
+                    <div class="text-sm font-semibold ${conversionClass}">${conversion}%</div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">конверсия</div>
                 </div>
+                <div class="text-right">
+                    <div class="text-sm font-semibold text-gray-900 dark:text-white">${percentage}%</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">от общего</div>
+                </div>
             </div>
         </div>
         
-        <div class="space-y-2">
-            <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                <span>Прогресс от общего количества лидов</span>
-                <span class="font-semibold text-gray-900 dark:text-white">${percentage}%</span>
-            </div>
-            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                <div class="h-full rounded-full transition-all duration-1000 ease-out ${progressColor}" style="width: ${percentage}%"></div>
-            </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-1000 ease-out ${progressColor}" style="width: ${percentage}%"></div>
         </div>
-        
-        ${index < FUNNEL_STEPS.length - 1 ? `
-        <div class="mt-3 flex justify-center">
-            <div class="text-gray-400 dark:text-gray-500">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
-                </svg>
-            </div>
-        </div>
-        ` : ''}
     `;
     
     return stepDiv;
