@@ -30,6 +30,7 @@ const STEP_COLORS = {
 };
 
 let funnelData = {};
+let funnelSources = [];
 
 // Загрузка данных воронки
 async function loadFunnelData() {
@@ -41,7 +42,11 @@ async function loadFunnelData() {
         document.getElementById('funnel-error').classList.add('hidden');
         document.getElementById('funnel-steps').innerHTML = '';
         
-        // Загружаем лиды
+        // Получаем параметры фильтрации
+        const filters = getFunnelFilters();
+        console.log('🔍 Фильтры воронки:', filters);
+        
+        // Загружаем лиды с фильтрами
         const response = await fetch(`${API_BASE_URL}leads`);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -50,8 +55,15 @@ async function loadFunnelData() {
         const leads = await response.json();
         console.log('📊 Получены лиды:', leads);
         
+        // Фильтруем данные
+        const filteredLeads = filterLeads(leads, filters);
+        console.log('📈 Отфильтрованные лиды:', filteredLeads);
+        
+        // Загружаем источники для фильтра
+        await loadFunnelSources(leads);
+        
         // Обрабатываем данные
-        processFunnelData(leads);
+        processFunnelData(filteredLeads);
         
         // Обновляем время последнего обновления
         document.getElementById('funnelLastUpdate').textContent = new Date().toLocaleTimeString('ru-RU');
@@ -63,6 +75,135 @@ async function loadFunnelData() {
         console.error('❌ Ошибка загрузки данных воронки:', error);
         showFunnelError(error.message);
     }
+}
+
+// Получение параметров фильтрации
+function getFunnelFilters() {
+    const dateFrom = document.getElementById('funnelDateFrom').value;
+    const dateTo = document.getElementById('funnelDateTo').value;
+    const source = document.getElementById('funnelSourceFilter').value;
+    
+    return {
+        dateFrom: dateFrom ? new Date(dateFrom) : null,
+        dateTo: dateTo ? new Date(dateTo) : null,
+        source: source || null
+    };
+}
+
+// Фильтрация лидов
+function filterLeads(leads, filters) {
+    return leads.filter(lead => {
+        // Фильтр по дате
+        if (filters.dateFrom || filters.dateTo) {
+            const leadDate = new Date(lead.created_at);
+            
+            if (filters.dateFrom && leadDate < filters.dateFrom) {
+                return false;
+            }
+            
+            if (filters.dateTo) {
+                const endDate = new Date(filters.dateTo);
+                endDate.setHours(23, 59, 59, 999); // Включаем весь день
+                if (leadDate > endDate) {
+                    return false;
+                }
+            }
+        }
+        
+        // Фильтр по источнику
+        if (filters.source && lead.source !== filters.source) {
+            return false;
+        }
+        
+        return true;
+    });
+}
+
+// Загрузка источников для фильтра
+async function loadFunnelSources(leads) {
+    try {
+        // Загружаем общие источники из настроек
+        const response = await fetch(`${API_BASE_URL}settings`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const settings = await response.json();
+        console.log('⚙️ Настройки:', settings);
+        
+        // Находим настройку lead_sources
+        const leadSourcesSetting = settings.find(setting => setting.key === 'lead_sources');
+        let sources = [];
+        
+        if (leadSourcesSetting && leadSourcesSetting.value) {
+            try {
+                sources = JSON.parse(leadSourcesSetting.value);
+                console.log('📊 Общие источники из настроек:', sources);
+            } catch (error) {
+                console.error('❌ Ошибка парсинга источников:', error);
+                // Fallback: используем источники из лидов
+                sources = [...new Set(leads.map(lead => lead.source).filter(source => source))];
+            }
+        } else {
+            // Fallback: используем источники из лидов
+            sources = [...new Set(leads.map(lead => lead.source).filter(source => source))];
+        }
+        
+        funnelSources = sources;
+        
+        // Обновляем селект источников
+        const sourceSelect = document.getElementById('funnelSourceFilter');
+        const currentValue = sourceSelect.value;
+        
+        // Очищаем опции (кроме "Все источники")
+        sourceSelect.innerHTML = '<option value="">Все источники</option>';
+        
+        // Добавляем источники из настроек
+        sources.forEach(source => {
+            const option = document.createElement('option');
+            option.value = source.id || source; // Используем id если есть, иначе само значение
+            option.textContent = source.name || source; // Используем name если есть, иначе само значение
+            sourceSelect.appendChild(option);
+        });
+        
+        // Восстанавливаем выбранное значение
+        sourceSelect.value = currentValue;
+        
+    } catch (error) {
+        console.error('❌ Ошибка загрузки источников:', error);
+        
+        // Fallback: используем источники из лидов
+        const sources = [...new Set(leads.map(lead => lead.source).filter(source => source))];
+        funnelSources = sources;
+        
+        // Обновляем селект источников
+        const sourceSelect = document.getElementById('funnelSourceFilter');
+        const currentValue = sourceSelect.value;
+        
+        // Очищаем опции (кроме "Все источники")
+        sourceSelect.innerHTML = '<option value="">Все источники</option>';
+        
+        // Добавляем источники
+        sources.forEach(source => {
+            const option = document.createElement('option');
+            option.value = source;
+            option.textContent = source;
+            sourceSelect.appendChild(option);
+        });
+        
+        // Восстанавливаем выбранное значение
+        sourceSelect.value = currentValue;
+    }
+}
+
+// Сброс фильтров воронки
+function resetFunnelFilters() {
+    document.getElementById('funnelDateFrom').value = '';
+    document.getElementById('funnelDateTo').value = '';
+    document.getElementById('funnelSourceFilter').value = '';
+    
+    // Перезагружаем данные
+    loadFunnelData();
 }
 
 // Обработка данных воронки
@@ -100,6 +241,9 @@ function updateFunnelUI(statusCounts) {
     const totalConversion = totalLeads > 0 ? Math.round((statusCounts.closed / totalLeads) * 100) : 0;
     document.getElementById('funnel-total-conversion').textContent = totalConversion + '%';
     
+    // Показываем информацию о фильтрах
+    showFunnelFilterInfo();
+    
     // Создаем этапы воронки
     createFunnelSteps(statusCounts);
     
@@ -117,6 +261,30 @@ function updateFunnelUI(statusCounts) {
     const avgConversion = conversions.length > 0 ? 
         Math.round(conversions.reduce((a, b) => a + b, 0) / conversions.length) : 0;
     document.getElementById('funnel-avg-conversion').textContent = avgConversion + '%';
+}
+
+// Показ информации о примененных фильтрах
+function showFunnelFilterInfo() {
+    const filters = getFunnelFilters();
+    const filterInfo = [];
+    
+    if (filters.dateFrom || filters.dateTo) {
+        const fromStr = filters.dateFrom ? filters.dateFrom.toLocaleDateString('ru-RU') : 'начала';
+        const toStr = filters.dateTo ? filters.dateTo.toLocaleDateString('ru-RU') : 'сегодня';
+        filterInfo.push(`📅 Период: ${fromStr} - ${toStr}`);
+    }
+    
+    if (filters.source) {
+        filterInfo.push(`📊 Источник: ${filters.source}`);
+    }
+    
+    // Обновляем заголовок с информацией о фильтрах
+    const title = document.querySelector('#funnel-content h2');
+    if (filterInfo.length > 0) {
+        title.innerHTML = `🎯 Воронка продаж <span class="text-sm font-normal text-gray-500 dark:text-gray-400">(${filterInfo.join(', ')})</span>`;
+    } else {
+        title.innerHTML = '🎯 Воронка продаж';
+    }
 }
 
 // Создание этапов воронки
@@ -199,6 +367,13 @@ function showFunnelError(message) {
 
 // Инициализация воронки при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
+    // Устанавливаем даты по умолчанию (последние 30 дней)
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+    
+    document.getElementById('funnelDateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
+    document.getElementById('funnelDateTo').value = today.toISOString().split('T')[0];
+    
     // Загружаем данные воронки при загрузке страницы
     if (typeof loadFunnelData === 'function') {
         loadFunnelData();
