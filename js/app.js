@@ -28,7 +28,7 @@ var globalTelegramSettings = {
 };
 
 // API Configuration
-var API_BASE_URL = 'https://51.250.107.231/api/'; // Через nginx прокси с HTTPS
+var API_BASE_URL = 'https://fulfilment-one.ru/api/'; // Официальный домен с SSL
 var isOnline = navigator.onLine; // Реальный статус подключения
 
 // Проверка подключения
