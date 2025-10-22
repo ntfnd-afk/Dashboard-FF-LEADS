@@ -268,11 +268,12 @@ function showFunnelFilterInfo() {
     const filters = getFunnelFilters();
     const filterInfo = [];
     
-    if (filters.dateFrom || filters.dateTo) {
-        const fromStr = filters.dateFrom ? filters.dateFrom.toLocaleDateString('ru-RU') : 'начала';
-        const toStr = filters.dateTo ? filters.dateTo.toLocaleDateString('ru-RU') : 'сегодня';
-        filterInfo.push(`📅 Период: ${fromStr} - ${toStr}`);
-    }
+    // Убираем показ периода в заголовке - он уже есть в фильтрах
+    // if (filters.dateFrom || filters.dateTo) {
+    //     const fromStr = filters.dateFrom ? filters.dateFrom.toLocaleDateString('ru-RU') : 'начала';
+    //     const toStr = filters.dateTo ? filters.dateTo.toLocaleDateString('ru-RU') : 'сегодня';
+    //     filterInfo.push(`📅 Период: ${fromStr} - ${toStr}`);
+    // }
     
     if (filters.source) {
         filterInfo.push(`📊 Источник: ${filters.source}`);
@@ -380,9 +381,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Обновляем данные каждые 30 секунд
-setInterval(() => {
-    if (document.getElementById('funnel-content') && !document.getElementById('funnel-content').classList.contains('hidden')) {
-        loadFunnelData();
+// Система событий для обновления воронки
+let funnelUpdateTimeout = null;
+
+// Функция для обновления воронки с дебаунсом
+function scheduleFunnelUpdate() {
+    // Отменяем предыдущее обновление
+    if (funnelUpdateTimeout) {
+        clearTimeout(funnelUpdateTimeout);
     }
-}, 30000);
+    
+    // Планируем обновление через 2 секунды (дебаунс)
+    funnelUpdateTimeout = setTimeout(() => {
+        if (document.getElementById('funnel-content') && !document.getElementById('funnel-content').classList.contains('hidden')) {
+            console.log('🔄 Обновляем воронку по событию...');
+            loadFunnelData();
+        }
+    }, 2000);
+}
+
+// Глобальная функция для вызова из других модулей
+window.updateFunnel = scheduleFunnelUpdate;

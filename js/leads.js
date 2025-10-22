@@ -220,6 +220,11 @@ async function addLead() {
         updateLeadsTable();
         updateDashboard();
         updateKanbanBoard();
+        
+        // Обновляем воронку при создании/редактировании лида
+        if (typeof window.updateFunnel === 'function') {
+            window.updateFunnel();
+        }
 
         // Если нужно создать расчет
         if (createCalculation) {
@@ -279,6 +284,12 @@ async function deleteLead(leadId) {
             updateLeadsTable();
             updateDashboard();
             updateKanbanBoard();
+            
+            // Обновляем воронку при удалении лида
+            if (typeof window.updateFunnel === 'function') {
+                window.updateFunnel();
+            }
+            
             showNotification('Лид удален', 'success');
         } else {
             throw new Error('Ошибка удаления лида');
@@ -535,6 +546,11 @@ function changeStatusFromDetails() {
                 updateLeadsTable();
                 updateKanbanBoard();
                 updateDashboard();
+                
+                // Обновляем воронку при изменении статуса лида
+                if (typeof window.updateFunnel === 'function') {
+                    window.updateFunnel();
+                }
                 
                 // Обновляем детальное окно
                 currentLeadDetails.status = newStatus;

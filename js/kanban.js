@@ -175,6 +175,11 @@ async function drop(event, newStatus) {
             updateLeadsTable();
             updateDashboard();
             
+            // Обновляем воронку при изменении статуса в канбане
+            if (typeof window.updateFunnel === 'function') {
+                window.updateFunnel();
+            }
+            
             showNotification(`Лид перемещен в "${getStatusText(newStatus)}"`, 'success');
         } else {
             // Откатываем изменения при ошибке
