@@ -386,6 +386,8 @@ async function loadData() {
                 if (leadsResponse.ok) {
                     const rawLeads = await leadsResponse.json();
                     console.log('🔍 Сырые данные из БД:', rawLeads);
+                    console.log('🔍 Количество лидов:', rawLeads.length);
+                    console.log('🔍 Первый лид:', rawLeads[0]);
                     
                     // Нормализуем поля лидов для совместимости
                     leads = rawLeads.map(lead => ({

@@ -160,6 +160,8 @@ async function addLead() {
         };
         
         console.log('📤 Отправляем в БД:', leadData);
+        console.log('📤 URL запроса:', `${API_BASE_URL}/leads${editingId ? `/${editingId}` : ''}`);
+        console.log('📤 Метод:', editingId ? 'PUT' : 'POST');
         
         
         if (editingId) {
@@ -173,6 +175,8 @@ async function addLead() {
             if (response.ok) {
                 const updatedLead = await response.json();
                 console.log('📥 Ответ от сервера:', updatedLead);
+                console.log('📥 Статус ответа:', response.status);
+                console.log('📥 Заголовки ответа:', response.headers);
                 
                 const index = leads.findIndex(l => l.id === parseInt(editingId));
                 if (index !== -1) {
@@ -181,14 +185,18 @@ async function addLead() {
                         clientName: updatedLead.client_name || updatedLead.name,
                         contact: updatedLead.phone,
                         comments: updatedLead.notes,
-                        inn: updatedLead.inn,
-                        kpp: updatedLead.kpp,
-                        contactPerson: updatedLead.contact_person,
-                        email: updatedLead.email
+                        // Используем данные из ответа или fallback на отправленные данные
+                        inn: updatedLead.inn || leadData.inn,
+                        kpp: updatedLead.kpp || leadData.kpp,
+                        contactPerson: updatedLead.contact_person || leadData.contact_person,
+                        email: updatedLead.email || leadData.email
                     };
                 }
                 showNotification('Лид обновлен', 'success');
             } else {
+                console.error('❌ Ошибка ответа сервера:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('❌ Текст ошибки:', errorText);
                 throw new Error('Ошибка обновления лида');
             }
         } else {
@@ -201,19 +209,25 @@ async function addLead() {
 
             if (response.ok) {
                 const newLead = await response.json();
+                console.log('📥 Ответ от сервера при создании:', newLead);
+                console.log('📥 Статус ответа:', response.status);
                 
                 leads.push({
                     ...newLead,
                     clientName: newLead.client_name || newLead.name,
                     contact: newLead.phone,
                     comments: newLead.notes,
-                    inn: newLead.inn,
-                    kpp: newLead.kpp,
-                    contactPerson: newLead.contact_person,
-                    email: newLead.email
+                    // Используем данные из ответа или fallback на отправленные данные
+                    inn: newLead.inn || leadData.inn,
+                    kpp: newLead.kpp || leadData.kpp,
+                    contactPerson: newLead.contact_person || leadData.contact_person,
+                    email: newLead.email || leadData.email
                 });
                 showNotification('Лид добавлен', 'success');
             } else {
+                console.error('❌ Ошибка ответа сервера при создании:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('❌ Текст ошибки:', errorText);
                 throw new Error('Ошибка сохранения лида');
             }
         }
