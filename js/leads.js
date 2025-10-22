@@ -156,7 +156,11 @@ async function addLead() {
                     phone: phone,
                     source: source,
                     status: status,
-                    notes: comments
+                    notes: comments,
+                    inn: inn || null,
+                    kpp: kpp || null,
+                    contact_person: contactPerson || null,
+                    email: email || null
                 })
             });
 
@@ -168,7 +172,11 @@ async function addLead() {
                         ...updatedLead,
                         clientName: updatedLead.client_name || updatedLead.name,
                         contact: updatedLead.phone,
-                        comments: updatedLead.notes
+                        comments: updatedLead.notes,
+                        inn: updatedLead.inn,
+                        kpp: updatedLead.kpp,
+                        contactPerson: updatedLead.contact_person,
+                        email: updatedLead.email
                     };
                 }
                 showNotification('Лид обновлен', 'success');
@@ -185,7 +193,11 @@ async function addLead() {
                     phone: phone,
                     source: source,
                     status: status,
-                    notes: comments
+                    notes: comments,
+                    inn: inn || null,
+                    kpp: kpp || null,
+                    contact_person: contactPerson || null,
+                    email: email || null
                 })
             });
 
@@ -195,7 +207,11 @@ async function addLead() {
                     ...newLead,
                     clientName: newLead.client_name || newLead.name,
                     contact: newLead.phone,
-                    comments: newLead.notes
+                    comments: newLead.notes,
+                    inn: newLead.inn,
+                    kpp: newLead.kpp,
+                    contactPerson: newLead.contact_person,
+                    email: newLead.email
                 });
                 showNotification('Лид добавлен', 'success');
             } else {

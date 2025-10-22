@@ -390,7 +390,11 @@ async function loadData() {
                         ...lead,
                         clientName: lead.client_name || lead.clientName || lead.name,
                         contact: lead.phone || lead.contact,
-                        comments: lead.notes || lead.comments
+                        comments: lead.notes || lead.comments,
+                        inn: lead.inn,
+                        kpp: lead.kpp,
+                        contactPerson: lead.contact_person || lead.contactPerson,
+                        email: lead.email
                     }));
                     localStorage.setItem('ff-leads', JSON.stringify(leads));
                     apiDataLoaded = true;

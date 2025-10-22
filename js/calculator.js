@@ -27,6 +27,62 @@ function loadCalculationsFromStorage() {
     }
 }
 
+// Загрузка расчетов из базы данных
+async function loadCalculationsFromDatabase() {
+    try {
+        if (typeof isOnline === 'function' && isOnline()) {
+            const response = await fetch(`${API_BASE_URL}/calculations`);
+            if (response.ok) {
+                const apiCalculations = await response.json();
+                
+                // Нормализуем данные для фронтенда
+                calculations = apiCalculations.map(calc => ({
+                    id: calc.id,
+                    leadId: calc.lead_id,
+                    clientId: calc.client_id,
+                    calculationNumber: calc.calculation_number,
+                    calculationDate: calc.calculation_date,
+                    manager: calc.manager,
+                    comments: calc.comments,
+                    totalServicesCost: parseFloat(calc.total_services_cost) || 0,
+                    vatAmount: parseFloat(calc.vat_amount) || 0,
+                    totalAmount: parseFloat(calc.total_amount) || 0,
+                    status: calc.status,
+                    createdAt: calc.created_at,
+                    updatedAt: calc.updated_at,
+                    createdBy: calc.created_by,
+                    approvedBy: calc.approved_by,
+                    approvedAt: calc.approved_at,
+                    serverId: calc.id,
+                    services: calc.items ? calc.items.map(item => ({
+                        id: item.id,
+                        name: item.service_name,
+                        quantity: item.quantity,
+                        price: parseFloat(item.unit_price) || 0,
+                        total: parseFloat(item.total_price) || 0
+                    })) : []
+                }));
+                
+                if (calculations.length > 0) {
+                    nextCalculationId = Math.max(...calculations.map(c => c.id)) + 1;
+                }
+                
+                // Сохраняем в localStorage для офлайн работы
+                saveCalculationsToStorage();
+                
+                console.log('Расчеты загружены из БД:', calculations.length);
+                return true;
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки расчетов из БД:', error);
+    }
+    
+    // Fallback: загружаем из localStorage
+    loadCalculationsFromStorage();
+    return false;
+}
+
 // Сохранение расчетов в localStorage
 function saveCalculationsToStorage() {
     try {
@@ -617,7 +673,7 @@ function generatePDFFromModal() {
     console.log('PDF данные:', calculationData);
 }
 
-function saveCalculationFromModal() {
+async function saveCalculationFromModal() {
     if (!currentLeadForCalculation) {
         showNotification('Нет данных для сохранения', 'error');
         return;
@@ -644,43 +700,85 @@ function saveCalculationFromModal() {
         createdAt: new Date().toISOString()
     };
     
-    // Добавляем в массив расчетов
-    calculations.push(calculationData);
-    
-    // Сохраняем в localStorage
-    saveCalculationsToStorage();
-    
-    // Обновляем расчет в лиде
-    const leadIndex = leads.findIndex(l => l.id === currentLeadForCalculation.id);
-    if (leadIndex !== -1) {
-        leads[leadIndex].calculation = {
-            items: [...modalServices],
-            total: calculationData.totalAmount,
-            markup: 0 // Можно добавить наценку позже
-        };
-        leads[leadIndex].updatedAt = new Date().toISOString();
+    try {
+        // Сохраняем в базу данных (если онлайн)
+        if (typeof isOnline === 'function' && isOnline()) {
+            const response = await fetch(`${API_BASE_URL}/calculations`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lead_id: calculationData.leadId,
+                    client_id: currentLeadForCalculation.clientId || null,
+                    calculation_number: calculationData.calculationNumber,
+                    calculation_date: calculationData.calculationDate,
+                    manager: calculationData.manager,
+                    comments: calculationData.comments,
+                    total_services_cost: calculationData.totalServicesCost,
+                    vat_amount: calculationData.vatAmount,
+                    total_amount: calculationData.totalAmount,
+                    status: 'draft',
+                    created_by: currentUser?.username || 'unknown',
+                    items: modalServices.map(service => ({
+                        service_name: service.name,
+                        quantity: service.quantity,
+                        unit_price: service.price,
+                        total_price: service.total
+                    }))
+                })
+            });
+            
+            if (response.ok) {
+                const savedCalculation = await response.json();
+                calculationData.id = savedCalculation.id;
+                calculationData.serverId = savedCalculation.id;
+                console.log('Расчет сохранен в БД:', savedCalculation);
+            } else {
+                console.warn('Ошибка сохранения в БД, сохраняем локально');
+            }
+        }
         
-        // Сохраняем обновленные лиды
-        localStorage.setItem('ff-leads', JSON.stringify(leads));
+        // Добавляем в массив расчетов
+        calculations.push(calculationData);
         
-        // Обновляем UI
-        if (typeof updateLeadsTable === 'function') {
-            updateLeadsTable();
+        // Сохраняем в localStorage
+        saveCalculationsToStorage();
+        
+        // Обновляем расчет в лиде
+        const leadIndex = leads.findIndex(l => l.id === currentLeadForCalculation.id);
+        if (leadIndex !== -1) {
+            leads[leadIndex].calculation = {
+                items: [...modalServices],
+                total: calculationData.totalAmount,
+                markup: 0 // Можно добавить наценку позже
+            };
+            leads[leadIndex].updatedAt = new Date().toISOString();
+            
+            // Сохраняем обновленные лиды
+            localStorage.setItem('ff-leads', JSON.stringify(leads));
+            
+            // Обновляем UI
+            if (typeof updateLeadsTable === 'function') {
+                updateLeadsTable();
+            }
+            if (typeof updateKanbanBoard === 'function') {
+                updateKanbanBoard();
+            }
+            if (typeof updateDashboard === 'function') {
+                updateDashboard();
+            }
         }
-        if (typeof updateKanbanBoard === 'function') {
-            updateKanbanBoard();
-        }
-        if (typeof updateDashboard === 'function') {
-            updateDashboard();
-        }
+        
+        showNotification('Расчет сохранен', 'success');
+        console.log('Сохраненный расчет:', calculationData);
+        
+        // Показываем список всех расчетов лида
+        const leadCalculations = getCalculationsForLead(currentLeadForCalculation.id);
+        showCalculationsList(leadCalculations);
+        
+    } catch (error) {
+        console.error('Ошибка сохранения расчета:', error);
+        showNotification('Ошибка сохранения расчета', 'error');
     }
-    
-    showNotification('Расчет сохранен', 'success');
-    console.log('Сохраненный расчет:', calculationData);
-    
-    // Показываем список всех расчетов лида
-    const leadCalculations = getCalculationsForLead(currentLeadForCalculation.id);
-    showCalculationsList(leadCalculations);
 }
 
 // Показать список расчетов лида
@@ -862,8 +960,13 @@ function generatePDFForCalculation(calculationId) {
 }
 
 // Инициализация калькулятора
-function initializeCalculator() {
-    loadCalculationsFromStorage();
+async function initializeCalculator() {
+    console.log('Инициализация калькулятора...');
+    
+    // Загружаем расчеты из базы данных или localStorage
+    await loadCalculationsFromDatabase();
+    
+    console.log('Калькулятор инициализирован. Загружено расчетов:', calculations.length);
 }
 
 // ========================================
@@ -888,7 +991,12 @@ const FFCalculator = {
     updateModalServicesList,
     calculateTotalInModal,
     generatePDFFromModal,
-    saveCalculationFromModal
+    saveCalculationFromModal,
+    loadCalculationsFromDatabase,
+    loadCalculationsFromStorage,
+    saveCalculationsToStorage,
+    getCalculationsForLead,
+    showCalculationsList
 };
 
 // Make functions available globally for onclick attributes
@@ -906,6 +1014,16 @@ window.updateServiceFromDropdown = updateServiceFromDropdown;
 window.calculateTotalInModal = calculateTotalInModal;
 window.generatePDFFromModal = generatePDFFromModal;
 window.saveCalculationFromModal = saveCalculationFromModal;
+window.loadCalculationsFromDatabase = loadCalculationsFromDatabase;
+window.loadCalculationsFromStorage = loadCalculationsFromStorage;
+window.saveCalculationsToStorage = saveCalculationsToStorage;
+window.getCalculationsForLead = getCalculationsForLead;
+window.showCalculationsList = showCalculationsList;
+window.generateCalculationNumber = generateCalculationNumber;
+window.generateLeadCode = generateLeadCode;
+window.createNewCalculationForm = createNewCalculationForm;
+window.updateModalServicesList = updateModalServicesList;
+window.initializeCalculator = initializeCalculator;
 
 // Инициализируем калькулятор при загрузке
 document.addEventListener('DOMContentLoaded', function() {
