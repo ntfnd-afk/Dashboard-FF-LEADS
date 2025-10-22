@@ -6,7 +6,7 @@ const FUNNEL_STEPS = [
     { key: 'contacted', name: 'Связались', icon: '📞', color: 'blue' },
     { key: 'quoted', name: 'На просчете', icon: '💰', color: 'yellow' },
     { key: 'negotiating', name: 'Переговоры', icon: '🤝', color: 'orange' },
-    { key: 'closed', name: 'Закрыт успешно', icon: '✅', color: 'red' }
+    { key: 'closed_successful', name: 'Закрыт успешно', icon: '✅', color: 'red' }
 ];
 
 // Маппинг статусов из БД на статусы воронки
@@ -15,9 +15,13 @@ const STATUS_MAPPING = {
     'contacted': 'contacted', 
     'quoted': 'quoted',
     'negotiating': 'negotiating',
-    'closed': 'closed',
-    'closed_won': 'closed',
-    'closed_lost': 'closed'
+    'won': 'closed_successful',
+    'closed_successful': 'closed_successful',
+    'closed_won': 'closed_successful',
+    'lost': 'closed_unsuccessful',
+    'closed_lost': 'closed_unsuccessful',
+    'not_relevant': 'closed_unsuccessful',
+    'тестовый_статус': 'closed_unsuccessful'
 };
 
 // Цвета для этапов воронки
@@ -208,20 +212,39 @@ function resetFunnelFilters() {
 
 // Обработка данных воронки
 function processFunnelData(leads) {
-    // Подсчитываем лиды по статусам
+    // Подсчитываем лиды по статусам (кумулятивная логика)
     const statusCounts = {};
     FUNNEL_STEPS.forEach(step => {
         statusCounts[step.key] = 0;
     });
     
+    // Определяем порядок этапов для кумулятивного подсчета
+    const stepOrder = FUNNEL_STEPS.map(step => step.key);
+    
     leads.forEach(lead => {
         const mappedStatus = STATUS_MAPPING[lead.status] || 'new';
-        if (statusCounts.hasOwnProperty(mappedStatus)) {
-            statusCounts[mappedStatus]++;
+        
+        // Если лид в статусе "неактуально" - не считаем его в воронке
+        if (mappedStatus === 'not_relevant' || mappedStatus === 'closed_unsuccessful') {
+            return;
+        }
+        
+        // Находим позицию статуса лида в воронке
+        const statusIndex = stepOrder.indexOf(mappedStatus);
+        
+        if (statusIndex !== -1) {
+            // Кумулятивно добавляем лид ко всем этапам до его текущего статуса включительно
+            for (let i = 0; i <= statusIndex; i++) {
+                const stepKey = stepOrder[i];
+                statusCounts[stepKey]++;
+            }
+        } else {
+            // Если статус не найден в воронке, считаем как "Новый"
+            statusCounts['new']++;
         }
     });
     
-    console.log('📈 Статистика по статусам:', statusCounts);
+    console.log('📈 Кумулятивная статистика по статусам:', statusCounts);
     
     // Сохраняем данные
     funnelData = statusCounts;
@@ -233,12 +256,14 @@ function processFunnelData(leads) {
 // Обновление интерфейса воронки
 function updateFunnelUI(statusCounts) {
     const totalLeads = statusCounts.new;
+    const closedDeals = statusCounts.closed_successful || 0;
     
     // Обновляем общую статистику
     document.getElementById('funnel-total-leads').textContent = totalLeads;
-    document.getElementById('funnel-closed-deals').textContent = statusCounts.closed;
+    document.getElementById('funnel-closed-deals').textContent = closedDeals;
     
-    const totalConversion = totalLeads > 0 ? Math.round((statusCounts.closed / totalLeads) * 100) : 0;
+    // Общая конверсия: от первого этапа до последнего
+    const totalConversion = totalLeads > 0 ? Math.round((closedDeals / totalLeads) * 100) : 0;
     document.getElementById('funnel-total-conversion').textContent = totalConversion + '%';
     
     // Показываем информацию о фильтрах
@@ -247,16 +272,19 @@ function updateFunnelUI(statusCounts) {
     // Создаем этапы воронки
     createFunnelSteps(statusCounts);
     
-    // Средняя конверсия
+    // Средняя конверсия между этапами
     const conversions = [];
-    let previousCount = totalLeads;
+    const stepOrder = FUNNEL_STEPS.map(step => step.key);
     
-    FUNNEL_STEPS.slice(1).forEach(step => {
-        const count = statusCounts[step.key] || 0;
-        const conversion = previousCount > 0 ? (count / previousCount) * 100 : 0;
+    for (let i = 1; i < stepOrder.length; i++) {
+        const currentStep = stepOrder[i];
+        const previousStep = stepOrder[i - 1];
+        const currentCount = statusCounts[currentStep] || 0;
+        const previousCount = statusCounts[previousStep] || 0;
+        
+        const conversion = previousCount > 0 ? (currentCount / previousCount) * 100 : 0;
         conversions.push(conversion);
-        previousCount = count;
-    });
+    }
     
     const avgConversion = conversions.length > 0 ? 
         Math.round(conversions.reduce((a, b) => a + b, 0) / conversions.length) : 0;
@@ -288,30 +316,38 @@ function showFunnelFilterInfo() {
     }
 }
 
-// Создание этапов воронки
+// Создание этапов воронки (горизонтальная версия)
 function createFunnelSteps(statusCounts) {
     const container = document.getElementById('funnel-steps');
     container.innerHTML = '';
     
-    let previousCount = statusCounts.new;
+    const stepOrder = FUNNEL_STEPS.map(step => step.key);
+    const totalLeads = statusCounts.new || 0;
+    
+    // Создаем контейнер для горизонтальной воронки
+    const funnelContainer = document.createElement('div');
+    funnelContainer.className = 'space-y-4';
     
     FUNNEL_STEPS.forEach((step, index) => {
         const count = statusCounts[step.key] || 0;
-        const percentage = previousCount > 0 ? Math.round((count / previousCount) * 100) : 0;
-        const conversion = index > 0 ? Math.round((count / previousCount) * 100) : 100;
         
-        // Создаем элемент этапа
-        const stepElement = createFunnelStepElement(step, count, percentage, conversion, index);
-        container.appendChild(stepElement);
-        
-        // Добавляем стрелку между этапами (кроме последнего)
-        if (index < FUNNEL_STEPS.length - 1) {
-            const arrowElement = createArrowElement();
-            container.appendChild(arrowElement);
+        // Рассчитываем конверсию от предыдущего этапа
+        let conversion = 100; // Для первого этапа всегда 100%
+        if (index > 0) {
+            const previousStep = stepOrder[index - 1];
+            const previousCount = statusCounts[previousStep] || 0;
+            conversion = previousCount > 0 ? Math.round((count / previousCount) * 100) : 0;
         }
         
-        previousCount = count;
+        // Рассчитываем процент от общего количества лидов
+        const percentage = totalLeads > 0 ? Math.round((count / totalLeads) * 100) : 0;
+        
+        // Создаем горизонтальный элемент этапа
+        const stepElement = createHorizontalFunnelStep(step, count, percentage, conversion, index, totalLeads);
+        funnelContainer.appendChild(stepElement);
     });
+    
+    container.appendChild(funnelContainer);
 }
 
 // Создание элемента этапа воронки
@@ -345,6 +381,73 @@ function createFunnelStepElement(step, count, percentage, conversion, index) {
     `;
     
     return stepDiv;
+}
+
+// Создание горизонтального элемента этапа воронки
+function createHorizontalFunnelStep(step, count, percentage, conversion, index, totalLeads) {
+    const stepDiv = document.createElement('div');
+    stepDiv.className = 'bg-white dark:bg-gray-800 rounded-lg p-4 shadow-md transition-all duration-300 hover:shadow-lg';
+    
+    const isFirstStep = index === 0;
+    const conversionText = isFirstStep ? 'Базовый уровень' : `Конверсия: ${conversion}%`;
+    const conversionClass = isFirstStep ? 'text-gray-600 dark:text-gray-400' : (conversion >= 50 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400');
+    
+    // Определяем цвет прогресс-бара
+    const progressColor = getProgressBarColor(step.color);
+    
+    stepDiv.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center">
+                <span class="text-xl mr-2">${step.icon}</span>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${step.name}</h3>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="text-right">
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">${count}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">лидов</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-lg font-semibold ${conversionClass}">${conversion}%</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">конверсия</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="space-y-2">
+            <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                <span>Прогресс от общего количества лидов</span>
+                <span class="font-semibold text-gray-900 dark:text-white">${percentage}%</span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-1000 ease-out ${progressColor}" style="width: ${percentage}%"></div>
+            </div>
+        </div>
+        
+        ${index < FUNNEL_STEPS.length - 1 ? `
+        <div class="mt-3 flex justify-center">
+            <div class="text-gray-400 dark:text-gray-500">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+        </div>
+        ` : ''}
+    `;
+    
+    return stepDiv;
+}
+
+// Получение цвета прогресс-бара
+function getProgressBarColor(stepColor) {
+    const colors = {
+        green: 'bg-gradient-to-r from-green-400 to-green-600',
+        blue: 'bg-gradient-to-r from-blue-400 to-blue-600',
+        yellow: 'bg-gradient-to-r from-yellow-400 to-yellow-600',
+        orange: 'bg-gradient-to-r from-orange-400 to-orange-600',
+        red: 'bg-gradient-to-r from-red-400 to-red-600',
+        purple: 'bg-gradient-to-r from-purple-400 to-purple-600'
+    };
+    return colors[stepColor] || 'bg-gradient-to-r from-gray-400 to-gray-600';
 }
 
 // Создание стрелки между этапами
