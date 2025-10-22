@@ -605,28 +605,36 @@ function editCalculation(calculationId) {
     modalServices = [...calculation.services];
     nextServiceId = Math.max(...modalServices.map(s => s.id)) + 1;
     
-    // Заполняем поля формы
-    document.getElementById('modalClientName').value = calculation.leadName || '';
-    document.getElementById('modalCalculationDate').value = new Date(calculation.createdAt).toLocaleDateString('ru-RU');
-    document.getElementById('modalCalculationNumber').value = calculation.calculationNumber || '';
-    document.getElementById('modalManager').value = calculation.manager || '';
-    document.getElementById('modalComments').value = calculation.comments || '';
-    
-    // Показываем форму редактирования
+    // Показываем форму редактирования СНАЧАЛА
     showNewCalculationForm();
     
     // Обновляем заголовок
     document.getElementById('calculatorModalTitle').textContent = `Редактирование расчета #${calculationId}`;
     document.getElementById('calculatorModalSubtitle').textContent = `Лид: ${calculation.leadName}`;
     
-    // Обновляем услуги и расчеты
-    updateModalServicesList();
-    calculateTotalInModal();
-    
     // Сохраняем ID редактируемого расчета
     document.getElementById('calculatorModal').setAttribute('data-editing-calculation-id', calculationId);
     
-    showNotification('Расчет загружен для редактирования', 'success');
+    // Заполняем поля формы ПОСЛЕ создания формы
+    setTimeout(() => {
+        const clientNameField = document.getElementById('modalClientName');
+        const calculationDateField = document.getElementById('modalCalculationDate');
+        const calculationNumberField = document.getElementById('modalCalculationNumber');
+        const managerField = document.getElementById('modalManager');
+        const commentsField = document.getElementById('modalComments');
+        
+        if (clientNameField) clientNameField.value = calculation.leadName || '';
+        if (calculationDateField) calculationDateField.value = new Date(calculation.createdAt).toLocaleDateString('ru-RU');
+        if (calculationNumberField) calculationNumberField.value = calculation.calculationNumber || '';
+        if (managerField) managerField.value = calculation.manager || '';
+        if (commentsField) commentsField.value = calculation.comments || '';
+        
+        // Обновляем услуги и расчеты
+        updateModalServicesList();
+        calculateTotalInModal();
+        
+        showNotification('Расчет загружен для редактирования', 'success');
+    }, 100);
 }
 
 // ========================================
