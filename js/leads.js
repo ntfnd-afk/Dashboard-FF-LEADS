@@ -146,26 +146,33 @@ async function addLead() {
     try {
         const editingId = document.getElementById('addLeadModal').getAttribute('data-editing-id');
         
+        // Подготавливаем данные для отправки
+        const leadData = {
+            name: clientName,
+            phone: phone,
+            source: source,
+            status: status,
+            notes: comments,
+            inn: inn || null,
+            kpp: kpp || null,
+            contact_person: contactPerson || null,
+            email: email || null
+        };
+        
+        console.log('📤 Отправляем данные лида в БД:', leadData);
+        
         if (editingId) {
             // Редактируем существующий лид
             const response = await fetch(`${API_BASE_URL}/leads/${editingId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: clientName,
-                    phone: phone,
-                    source: source,
-                    status: status,
-                    notes: comments,
-                    inn: inn || null,
-                    kpp: kpp || null,
-                    contact_person: contactPerson || null,
-                    email: email || null
-                })
+                body: JSON.stringify(leadData)
             });
 
             if (response.ok) {
                 const updatedLead = await response.json();
+                console.log('📥 Ответ от сервера при редактировании:', updatedLead);
+                
                 const index = leads.findIndex(l => l.id === parseInt(editingId));
                 if (index !== -1) {
                     leads[index] = {
@@ -178,6 +185,7 @@ async function addLead() {
                         contactPerson: updatedLead.contact_person,
                         email: updatedLead.email
                     };
+                    console.log('💾 Обновленный лид в массиве:', leads[index]);
                 }
                 showNotification('Лид обновлен', 'success');
             } else {
@@ -188,21 +196,13 @@ async function addLead() {
             const response = await fetch(`${API_BASE_URL}/leads`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: clientName,
-                    phone: phone,
-                    source: source,
-                    status: status,
-                    notes: comments,
-                    inn: inn || null,
-                    kpp: kpp || null,
-                    contact_person: contactPerson || null,
-                    email: email || null
-                })
+                body: JSON.stringify(leadData)
             });
 
             if (response.ok) {
                 const newLead = await response.json();
+                console.log('📥 Ответ от сервера при создании:', newLead);
+                
                 leads.push({
                     ...newLead,
                     clientName: newLead.client_name || newLead.name,
@@ -213,6 +213,7 @@ async function addLead() {
                     contactPerson: newLead.contact_person,
                     email: newLead.email
                 });
+                console.log('💾 Новый лид в массиве:', leads[leads.length - 1]);
                 showNotification('Лид добавлен', 'success');
             } else {
                 throw new Error('Ошибка сохранения лида');
@@ -243,6 +244,14 @@ async function addLead() {
 function editLead(leadId) {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
+
+    console.log('🔍 Редактируем лид:', lead);
+    console.log('🔍 Поля лида:', {
+        inn: lead.inn,
+        kpp: lead.kpp,
+        contactPerson: lead.contactPerson,
+        email: lead.email
+    });
 
     // Store lead ID for editing
     document.getElementById('addLeadModal').setAttribute('data-editing-id', leadId);

@@ -384,18 +384,24 @@ async function loadData() {
                 let apiDataLoaded = false;
 
                 if (leadsResponse.ok) {
-                    leads = await leadsResponse.json();
+                    const rawLeads = await leadsResponse.json();
+                    console.log('🔍 Сырые данные лидов из БД:', rawLeads);
+                    
                     // Нормализуем поля лидов для совместимости
-                    leads = leads.map(lead => ({
-                        ...lead,
-                        clientName: lead.client_name || lead.clientName || lead.name,
-                        contact: lead.phone || lead.contact,
-                        comments: lead.notes || lead.comments,
-                        inn: lead.inn,
-                        kpp: lead.kpp,
-                        contactPerson: lead.contact_person || lead.contactPerson,
-                        email: lead.email
-                    }));
+                    leads = rawLeads.map(lead => {
+                        const normalizedLead = {
+                            ...lead,
+                            clientName: lead.client_name || lead.clientName || lead.name,
+                            contact: lead.phone || lead.contact,
+                            comments: lead.notes || lead.comments,
+                            inn: lead.inn,
+                            kpp: lead.kpp,
+                            contactPerson: lead.contact_person || lead.contactPerson,
+                            email: lead.email
+                        };
+                        console.log('🔄 Нормализованный лид:', normalizedLead);
+                        return normalizedLead;
+                    });
                     localStorage.setItem('ff-leads', JSON.stringify(leads));
                     apiDataLoaded = true;
                 }
