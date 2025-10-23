@@ -69,11 +69,12 @@ async function loadFunnelData() {
         // Обрабатываем данные
         processFunnelData(filteredLeads);
         
-        // Обновляем время последнего обновления
-        document.getElementById('funnelLastUpdate').textContent = new Date().toLocaleTimeString('ru-RU');
+        // Обновляем время последнего обновления (убрано, так как элемент больше не существует)
+        // document.getElementById('funnelLastUpdate').textContent = new Date().toLocaleTimeString('ru-RU');
         
         // Скрываем загрузку
-        document.getElementById('funnel-loading').classList.add('hidden');
+        const loadingEl = document.getElementById('funnel-loading');
+        if (loadingEl) loadingEl.classList.add('hidden');
         
     } catch (error) {
         console.error('❌ Ошибка загрузки данных воронки:', error);
@@ -157,6 +158,11 @@ async function loadFunnelSources(leads) {
         
         // Обновляем селект источников
         const sourceSelect = document.getElementById('funnelSourceFilter');
+        if (!sourceSelect) {
+            console.error('❌ Селект funnelSourceFilter не найден');
+            return;
+        }
+        
         const currentValue = sourceSelect.value;
         
         // Очищаем опции (кроме "Все источники")
@@ -182,6 +188,11 @@ async function loadFunnelSources(leads) {
         
         // Обновляем селект источников
         const sourceSelect = document.getElementById('funnelSourceFilter');
+        if (!sourceSelect) {
+            console.error('❌ Селект funnelSourceFilter не найден в fallback');
+            return;
+        }
+        
         const currentValue = sourceSelect.value;
         
         // Очищаем опции (кроме "Все источники")
@@ -307,6 +318,11 @@ function showFunnelFilterInfo() {
 // Создание компактных этапов воронки
 function createFunnelSteps(statusCounts) {
     const container = document.getElementById('funnel-steps');
+    if (!container) {
+        console.error('❌ Контейнер funnel-steps не найден');
+        return;
+    }
+    
     container.innerHTML = '';
     
     const stepOrder = FUNNEL_STEPS.map(step => step.key);
@@ -439,9 +455,13 @@ function createArrowElement() {
 
 // Показ ошибки воронки
 function showFunnelError(message) {
-    document.getElementById('funnel-loading').classList.add('hidden');
-    document.getElementById('funnel-error').classList.remove('hidden');
-    document.getElementById('funnel-error-message').textContent = message;
+    const loadingEl = document.getElementById('funnel-loading');
+    const errorEl = document.getElementById('funnel-error');
+    const errorMessageEl = document.getElementById('funnel-error-message');
+    
+    if (loadingEl) loadingEl.classList.add('hidden');
+    if (errorEl) errorEl.classList.remove('hidden');
+    if (errorMessageEl) errorMessageEl.textContent = message;
 }
 
 // Инициализация воронки при загрузке страницы
@@ -450,8 +470,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const today = new Date();
     const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
     
-    document.getElementById('funnelDateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
-    document.getElementById('funnelDateTo').value = today.toISOString().split('T')[0];
+    const dateFromEl = document.getElementById('funnelDateFrom');
+    const dateToEl = document.getElementById('funnelDateTo');
+    
+    if (dateFromEl) dateFromEl.value = thirtyDaysAgo.toISOString().split('T')[0];
+    if (dateToEl) dateToEl.value = today.toISOString().split('T')[0];
     
     // Загружаем данные воронки при загрузке страницы
     if (typeof loadFunnelData === 'function') {
