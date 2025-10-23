@@ -259,12 +259,17 @@ function updateFunnelUI(statusCounts) {
     const closedDeals = statusCounts.closed_successful || 0;
     
     // Обновляем общую статистику
-    document.getElementById('funnel-total-leads').textContent = totalLeads;
-    document.getElementById('funnel-closed-deals').textContent = closedDeals;
+    const totalLeadsEl = document.getElementById('funnel-total-leads');
+    const closedDealsEl = document.getElementById('funnel-closed-deals');
+    const totalConversionEl = document.getElementById('funnel-total-conversion');
+    const avgConversionEl = document.getElementById('funnel-avg-conversion');
+    
+    if (totalLeadsEl) totalLeadsEl.textContent = totalLeads;
+    if (closedDealsEl) closedDealsEl.textContent = closedDeals;
     
     // Общая конверсия: от первого этапа до последнего
     const totalConversion = totalLeads > 0 ? Math.round((closedDeals / totalLeads) * 100) : 0;
-    document.getElementById('funnel-total-conversion').textContent = totalConversion + '%';
+    if (totalConversionEl) totalConversionEl.textContent = totalConversion + '%';
     
     // Показываем информацию о фильтрах
     showFunnelFilterInfo();
@@ -288,32 +293,15 @@ function updateFunnelUI(statusCounts) {
     
     const avgConversion = conversions.length > 0 ? 
         Math.round(conversions.reduce((a, b) => a + b, 0) / conversions.length) : 0;
-    document.getElementById('funnel-avg-conversion').textContent = avgConversion + '%';
+    if (avgConversionEl) avgConversionEl.textContent = avgConversion + '%';
 }
 
 // Показ информации о примененных фильтрах
+// Показ информации о фильтрах (упрощенная версия)
 function showFunnelFilterInfo() {
-    const filters = getFunnelFilters();
-    const filterInfo = [];
-    
-    // Убираем показ периода в заголовке - он уже есть в фильтрах
-    // if (filters.dateFrom || filters.dateTo) {
-    //     const fromStr = filters.dateFrom ? filters.dateFrom.toLocaleDateString('ru-RU') : 'начала';
-    //     const toStr = filters.dateTo ? filters.dateTo.toLocaleDateString('ru-RU') : 'сегодня';
-    //     filterInfo.push(`📅 Период: ${fromStr} - ${toStr}`);
-    // }
-    
-    if (filters.source) {
-        filterInfo.push(`📊 Источник: ${filters.source}`);
-    }
-    
-    // Обновляем заголовок с информацией о фильтрах
-    const title = document.querySelector('#funnel-content h2');
-    if (filterInfo.length > 0) {
-        title.innerHTML = `🎯 Воронка продаж <span class="text-sm font-normal text-gray-500 dark:text-gray-400">(${filterInfo.join(', ')})</span>`;
-    } else {
-        title.innerHTML = '🎯 Воронка продаж';
-    }
+    // Убираем показ информации о фильтрах в заголовке, так как заголовок убран
+    // Фильтры теперь находятся в хедере и их состояние видно напрямую
+    return;
 }
 
 // Создание компактных этапов воронки
