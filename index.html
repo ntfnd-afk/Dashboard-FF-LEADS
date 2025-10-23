@@ -428,14 +428,14 @@
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">📅 Период</label>
                                     <div class="flex space-x-2">
-                                        <input type="date" id="funnelDateFrom" class="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white" onchange="loadFunnelData()">
-                                        <span class="flex items-center text-gray-500 dark:text-gray-400 text-sm">до</span>
-                                        <input type="date" id="funnelDateTo" class="w-32 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white" onchange="loadFunnelData()">
+                                        <input type="date" id="funnelDateFrom" class="w-32 px-2 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white" onchange="loadFunnelData()">
+                                        <span class="flex items-center text-gray-500 dark:text-gray-400 text-xs">до</span>
+                                        <input type="date" id="funnelDateTo" class="w-32 px-2 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white" onchange="loadFunnelData()">
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">📊 Источник</label>
-                                    <select id="funnelSourceFilter" onchange="loadFunnelData()" class="w-40 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
+                                    <select id="funnelSourceFilter" onchange="loadFunnelData()" class="w-40 px-2 py-2 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:text-white">
                                         <option value="">Все источники</option>
                                         <!-- Опции будут загружены динамически -->
                                     </select>
@@ -446,7 +446,7 @@
                             </div>
                             
                             <!-- Update button -->
-                            <button onclick="loadFunnelData()" class="flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">
+                            <button onclick="loadFunnelData()" class="flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-xs">
                                 <i data-lucide="refresh-cw" class="h-4 w-4 mr-1"></i>
                                 Обновить
                             </button>
